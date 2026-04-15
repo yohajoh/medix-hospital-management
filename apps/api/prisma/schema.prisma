@@ -1,18 +1,13 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client-js"
-  // output   = "../generated/prisma"
+  provider      = "prisma-client-js"
+  // Ensures Prisma engine works inside the Alpine Docker container
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-// --- Enums for strict typing ---
 enum UserRole {
   PATIENT
   DOCTOR
@@ -26,26 +21,20 @@ enum UserStatus {
 }
 
 model User {
-  id                 String     @id @default(uuid()) // Standard for Postgres security
+  id                 String     @id @default(uuid())
   name               String
   email              String     @unique
-  password           String?    // Nullable because of Google OAuth
+  password           String?    
   
-  // --- Google OAuth & Workflow Integration ---
   googleId           String?    @unique
   googleRefreshToken String?    
   calendarConnected  Boolean    @default(false)
 
-  // --- Hospital Roles & Status ---
   role               UserRole   @default(PATIENT)
   status             UserStatus @default(ACTIVE)
 
   createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt // Automatically tracks edits
+  updatedAt          DateTime   @updatedAt 
 
-  // Relations (Examples for a huge system)
-  // appointments    Appointment[] 
-  // medicalRecords  MedicalRecord[]
-
-  @@map("users") // Maps the model to a lowercase table name in Postgres
+  @@map("users") 
 }
