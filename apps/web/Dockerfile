@@ -11,18 +11,40 @@ COPY . .
 RUN turbo prune --scope=web --docker
 
 FROM base AS installer
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
+
+# Copy pruned workspace metadata
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+
+# Install dependencies (Including devDeps for hot-reloading)
 RUN pnpm install --frozen-lockfile
+
+# Copy the actual source code
 COPY --from=builder /app/out/full/ .
-RUN pnpm turbo run build --filter=web
+
+# REDUNDANT BUILD STEP REMOVED: 
+# We don't run 'pnpm build' here because we are using 'next dev' in the runner.
 
 FROM base AS runner
 WORKDIR /app
-ENV NODE_ENV=production
-RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+
+ENV NODE_ENV=development
+
+# Setup user and permissions
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Prepare cache directory with correct permissions
+RUN mkdir -p apps/web/.next && chown -R nextjs:nodejs /app
+
 USER nextjs
-COPY --from=installer /app .
+
+# Copy all files from installer
+COPY --from=installer --chown=nextjs:nodejs /app .
+
 EXPOSE 3000
-CMD ["pnpm", "--filter", "web", "start"]
+
+# Start in dev mode for hot-reloading
+CMD ["pnpm", "--filter", "web", "dev"]
