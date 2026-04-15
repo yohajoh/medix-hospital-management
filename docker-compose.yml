@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  medix-api:
+    build:
+      context: .
+      # Point to 'api' folder based on your screenshot
+      dockerfile: apps/api/Dockerfile
+    container_name: medix-api
+    ports:
+      - "5000:5000"
+    env_file: apps/api/.env
+    environment:
+      - NODE_ENV=production
+    restart: always
+
+  medix-web:
+    build:
+      context: .
+      # Point to 'web' folder based on your screenshot
+      dockerfile: apps/web/Dockerfile
+    container_name: medix-web
+    ports:
+      - "3000:3000"
+    env_file: apps/web/.env
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    depends_on:
+      - medix-api
+    restart: always
