@@ -25,19 +25,19 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-# Render uses a dynamic port, but we'll default to 3000
-ENV PORT=3000
+# Force Next.js to listen on all interfaces
+ENV HOSTNAME="0.0.0.0"
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# We copy the entire app, but focus on the web package
 COPY --from=installer --chown=nextjs:nodejs /app .
 
 USER nextjs
 
 EXPOSE 3000
 
-# DIRECT EXECUTION: This is the secret to stability.
-# We go straight to the next binary inside the web package.
-CMD ["node", "apps/web/node_modules/.bin/next", "start", "apps/web", "-p", "3000", "-H", "0.0.0.0"]
+# We use the full path to the web folder and let the shell execute the binary
+# This avoids the SyntaxError because it won't force Node to parse a shell script
+WORKDIR /app/apps/web
+CMD ["node_modules/.bin/next", "start", "-p", "3000", "-H", "0.0.0.0"]
