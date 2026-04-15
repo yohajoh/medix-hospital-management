@@ -4,12 +4,18 @@ services:
       context: .
       # Point to 'api' folder based on your screenshot
       dockerfile: apps/api/Dockerfile
+    volumes:
+      - .:/app
+      - /app/node_modules # Protect container modules from being overwritten
+      - /app/apps/api/node_modules
     container_name: medix-api
     ports:
       - "5000:5000"
     env_file: apps/api/.env
     environment:
       - NODE_ENV=production
+    # Override the CMD to use a watcher
+    command: pnpm --filter api dev
     restart: always
 
   medix-web:
@@ -17,12 +23,18 @@ services:
       context: .
       # Point to 'web' folder based on your screenshot
       dockerfile: apps/web/Dockerfile
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next # Don't sync the build folder
     container_name: medix-web
     ports:
       - "3000:3000"
     env_file: apps/web/.env
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:5000
+    command: pnpm --filter web dev
     depends_on:
       - medix-api
     restart: always

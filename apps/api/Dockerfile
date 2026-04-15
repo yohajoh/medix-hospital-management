@@ -14,20 +14,25 @@ FROM base AS installer
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
+# Copy pruned workspace metadata
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
-# 1. Install dependencies (including prisma)
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
+# Copy the actual source code
 COPY --from=builder /app/out/full/ .
 
-# 2. GENERATE PRISMA CLIENT 
-# We use 'pnpm dlx' to ensure the prisma CLI is available even if 
-# it's not in the global path.
-RUN pnpm --filter api exec npx prisma generate
+# Inject required dependencies for Prisma 7
+RUN pnpm --filter api add -D prisma @types/node
+RUN pnpm --filter api add @prisma/client @prisma/adapter-pg dotenv
 
-# 3. Build the project
+# GENERATE PRISMA CLIENT: 
+# Path is relative to the 'api' package directory
+RUN pnpm --filter api exec prisma generate --schema=prisma/schema.prisma
+
+# Build the API
 RUN pnpm turbo run build --filter=api
 
 FROM base AS runner
