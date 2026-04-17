@@ -1,17 +1,15 @@
-FROM node:22-alpine AS base
+FROM node:22-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN npm install -g pnpm@9.0.0
 
 FROM base AS builder
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 RUN pnpm add -g turbo
 COPY . .
 RUN turbo prune --scope=web --docker
 
 FROM base AS installer
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY --from=builder /app/out/json/ .
