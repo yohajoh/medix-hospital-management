@@ -16,7 +16,7 @@ services:
       - NODE_ENV=production
     # Override the CMD to use a watcher
     command: pnpm --filter api dev
-    user: "1000:1000"
+    # user: "1000:1000"
     restart: always
 
   medix-web:
@@ -36,7 +36,7 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:5000
     command: pnpm --filter web dev
-    user: "1000:1000"
+    # user: "1000:1000"
     depends_on:
       - medix-api
     restart: always
