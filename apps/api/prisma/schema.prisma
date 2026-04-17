@@ -1,12 +1,13 @@
 generator client {
   provider      = "prisma-client-js"
-  // Ensures Prisma engine works inside the Alpine Docker container
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
 }
+
+// --- ENUMS ---
 
 enum UserRole {
   PATIENT
@@ -20,12 +21,22 @@ enum UserStatus {
   PENDING
 }
 
+enum QRType {
+  LOGIN
+  CHECKIN
+  PRESCRIPTION
+  DOCUMENT_ACCESS
+}
+
+// --- MODELS ---
+
 model User {
   id                 String     @id @default(uuid())
   name               String
   email              String     @unique
   password           String?    
   
+  // OAuth & Integration
   googleId           String?    @unique
   googleRefreshToken String?    
   calendarConnected  Boolean    @default(false)
@@ -33,8 +44,54 @@ model User {
   role               UserRole   @default(PATIENT)
   status             UserStatus @default(ACTIVE)
 
+  // Relations
+  qrCodes            QRCode[]
+  notifications      Notification[]
+
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt 
 
   @@map("users") 
+}
+
+model QRCode {
+  id           String    @id @default(uuid())
+  // The unique session ID used for the Socket.io room
+  sessionId    String    @unique
+  
+  // The user who scanned/authorized the code
+  userId       String?
+  user         User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type         QRType    @default(LOGIN)
+  
+  // Handshake State
+  isUsed       Boolean   @default(false)
+  isApproved   Boolean   @default(false)
+  
+  // Metadata for security (optional but recommended)
+  deviceInfo   String?   // e.g., "Chrome on Android"
+  ipAddress    String?
+
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+
+  @@index([sessionId])
+  @@map("qr_codes")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title     String
+  message   String
+  type      String   // e.g., "APPOINTMENT", "LAB_RESULT", "SYSTEM"
+  isRead    Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("notifications")
 }
