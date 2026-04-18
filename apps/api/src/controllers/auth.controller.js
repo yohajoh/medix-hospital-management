@@ -3,6 +3,64 @@ import { oauth2Client, SCOPES } from "../config/google.config.js";
 import { prisma } from "../lib/prisma.js";
 import { generateAuthToken } from "../utils/auth.util.js";
 import * as authService from "../services/auth.service.js";
+import { OTPService } from "../services/otp.service.js"; // Import the new service
+import { OTPPurpose } from "@prisma/client"; // Import the Enum from Prisma
+
+/**
+ * @desc Request OTP (Step 1)
+ */
+const requestLoginOTP = async (req, res) => {
+  try {
+    const { identifier } = req.body;
+    if (!identifier) return res.status(400).json({ success: false, message: "Identifier required" });
+
+    const result = await OTPService.requestLoginOTP(identifier, OTPPurpose.LOGIN);
+
+    if (!result.success) {
+      return res.status(result.status).json({ success: false, message: result.message });
+    }
+
+    return res.status(200).json({ success: true, message: "Verification code sent." });
+  } catch (error) {
+    console.error("Request OTP Controller Error:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+/**
+ * @desc Verify OTP & Login (Step 2)
+ */
+const verifyOTPAndLogin = async (req, res) => {
+  try {
+    const { identifier, otp } = req.body;
+    if (!identifier || !otp) return res.status(400).json({ success: false, message: "Credentials missing" });
+
+    const result = await OTPService.verifyLoginOTP(identifier, otp, OTPPurpose.LOGIN);
+
+    if (!result.success) {
+      return res.status(result.status).json({ success: false, message: result.message });
+    }
+
+    // Standardize user data through authService helper
+    const userProfile = await authService.getUserProfile(result.user.id);
+    const token = generateAuthToken(result.user.id, result.user.role);
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      user: userProfile,
+    });
+  } catch (error) {
+    console.error("Verify OTP Controller Error:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
 
 // DESKTOP: Generate QR
 export const getQR = async (req, res) => {
@@ -105,6 +163,7 @@ const googleCallback = async (req, res) => {
           name: data.name,
           email: data.email,
           googleId: data.id,
+          password: "john@0234",
           // We don't assume calendar access here during initial login
         },
       });
@@ -129,7 +188,7 @@ const googleCallback = async (req, res) => {
 /**
  * @desc Standard Form Login (Email/Username/phone + Password)
  */
-export const login = async (req, res) => {
+const login = async (req, res) => {
   try {
     const { identifier, password } = req.body;
 
@@ -176,7 +235,7 @@ export const login = async (req, res) => {
 /**
  * @desc Get Profile
  */
-export const getMe = async (req, res) => {
+const getMe = async (req, res) => {
   try {
     // req.user.id comes from your 'protect' middleware
     const userProfile = await authService.getUserProfile(req.user.id);
@@ -201,4 +260,4 @@ export const getMe = async (req, res) => {
   }
 };
 
-export { initiateGoogleAuth, googleCallback, requestCalendarAccess, login, getMe };
+export { initiateGoogleAuth, googleCallback, requestCalendarAccess, login, requestLoginOTP, verifyOTPAndLogin, getMe };

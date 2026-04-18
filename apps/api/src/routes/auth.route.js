@@ -5,18 +5,32 @@ import {
   googleCallback,
   requestCalendarAccess,
   getMe,
-  getQR, // New QR controller
-  approveQR, // New QR controller
+  getQR,
+  approveQR,
+  requestLoginOTP, // New
+  verifyOTPAndLogin, // New
 } from "../controllers/auth.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
 /**
- * @desc Standard Form Login
+ * @desc Standard Form Login (Email/Phone + Password)
  * @access Public
  */
 router.post("/login", login);
+
+/**
+ * @desc Passwordless Login Step 1: Request OTP code via Email/Phone
+ * @access Public
+ */
+router.post("/otp/request", requestLoginOTP);
+
+/**
+ * @desc Passwordless Login Step 2: Verify OTP code and issue Session
+ * @access Public
+ */
+router.post("/otp/verify", verifyOTPAndLogin);
 
 // --- Standard Google OAuth Routes ---
 router.get("/google", initiateGoogleAuth);
@@ -30,13 +44,13 @@ router.get("/me", protect, getMe);
 
 /**
  * @desc Step 1: Desktop requests a QR session
- * @access Public (Desktop is not logged in yet)
+ * @access Public
  */
 router.get("/qr/generate", getQR);
 
 /**
  * @desc Step 2: Mobile scans and approves the session
- * @access Private (Mobile must be logged in to authorize)
+ * @access Private (Requires mobile app authentication)
  */
 router.post("/qr/approve", protect, approveQR);
 

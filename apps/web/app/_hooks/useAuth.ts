@@ -3,29 +3,29 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+// Define the types of loading states
+export type LoadingType = "normal" | "google" | "otp" | null;
+
 export const useAuth = () => {
   const router = useRouter();
 
-  // --- State Management ---
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingType, setLoadingType] = useState<LoadingType>(null); // New state
   const [error, setError] = useState<string | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-  /**
-   * 1. Normal Credentials Login
-   * Relies on the backend to set the 'Set-Cookie' header on success.
-   */
   const handleNormalLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!identifier || !password) {
       setError("Please enter both credentials.");
       return;
     }
 
     setIsLoading(true);
+    setLoadingType("normal");
     setError(null);
 
     try {
@@ -41,29 +41,23 @@ export const useAuth = () => {
         throw new Error(data.message || "Unauthorized access.");
       }
 
-      // If backend handles cookies, we just verify success and redirect
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "Connection to clinical server failed.");
-    } finally {
       setIsLoading(false);
+      setLoadingType(null);
     }
   };
 
-  /**
-   * 2. Google OAuth Logic
-   * Fetches the dynamic OAuth URL from the backend and redirects the window.
-   */
   const handleGoogleLogin = async () => {
     setIsLoading(true);
+    setLoadingType("google");
     setError(null);
     try {
-      // Fetch the generated Google Auth URL from your backend
       const response = await fetch(`${API_URL}/auth/google`);
       const { url } = await response.json();
 
       if (url) {
-        // Redirect the entire window to the Google Consent screen
         window.location.href = url;
       } else {
         throw new Error("Could not retrieve authentication URL.");
@@ -71,14 +65,77 @@ export const useAuth = () => {
     } catch (err) {
       setError("Google SSO is currently unavailable.");
       setIsLoading(false);
+      setLoadingType(null);
+    }
+  };
+  /**
+   * Step 1: Request the OTP code
+   * Called from the main Login page
+   */
+  const handleOTPRequest = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+
+    if (!identifier) {
+      setError("Please enter your email or phone number first.");
+      return;
+    }
+
+    setIsLoading(true);
+    setLoadingType("otp");
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/otp/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send verification code.");
+      }
+
+      // Success: Code sent! Now navigate to the verification input page
+      // We pass the identifier in the URL query so the verify page knows who to verify
+      router.push(`/auth/verify-otp?target=${encodeURIComponent(identifier)}`);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+      setLoadingType(null);
     }
   };
 
   /**
-   * 3. OTP Login Redirect
+   * Step 2: Verify the code and Login
+   * Called from the Verify OTP Page
    */
-  const handleOTPLogin = () => {
-    router.push("/auth/otp-login");
+  const handleOTPVerify = async (otpCode: string, target: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/otp/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: target, otp: otpCode }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Invalid or expired code.");
+      }
+
+      // Success: Session cookie is set by server, go to dashboard
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message);
+      setIsLoading(false);
+      return false; // Return false so the UI component can reset
+    }
   };
 
   return {
@@ -87,9 +144,11 @@ export const useAuth = () => {
     password,
     setPassword,
     isLoading,
+    loadingType, // Exported to differentiate buttons
     error,
     handleNormalLogin,
     handleGoogleLogin,
-    handleOTPLogin,
+    handleOTPRequest,
+    handleOTPVerify,
   };
 };

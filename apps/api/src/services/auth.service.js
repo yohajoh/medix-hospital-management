@@ -27,6 +27,7 @@ export const verifyCredentials = async (identifier, password) => {
 
   // 3. Compare passwords
   const isMatch = await comparePassword(password, user.password);
+  // const isMatch = password === user.password; // Replace with actual hash comparison in production
   if (!isMatch) {
     throw new Error("Invalid credentials");
   }
