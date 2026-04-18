@@ -30,9 +30,13 @@ function VerifyOTPContent() {
     handleOTPVerify(code, target);
   };
 
-  const handleResend = () => {
-    handleOTPRequest(); // Re-uses the request logic from useAuth
-    setTimeLeft(299); // Reset timer
+  const handleResend = async () => {
+    // We use the 'target' we already have from the URL
+    const result = await handleOTPRequest(undefined, target);
+
+    if (result?.success) {
+      setTimeLeft(299); // Only reset timer if the API call actually worked
+    }
   };
 
   return (

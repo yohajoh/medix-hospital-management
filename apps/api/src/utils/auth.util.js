@@ -1,6 +1,18 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
+const SALT_ROUNDS = 10;
+
+/**
+ * Hashes a plain text password using bcrypt.
+ * @param {string} password - The plain text password to hash.
+ * @returns {Promise<string>} The hashed password.
+ */
+export const hashPassword = async (password) => {
+  const salt = await bcrypt.genSalt(SALT_ROUNDS);
+  return await bcrypt.hash(password, salt);
+};
+
 /**
  * Replaces userSchema.methods.correctPassword
  * @param {string} candidatePassword - Plain text from login request

@@ -3,7 +3,7 @@ import { getIO } from "../lib/socket.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { QRType } from "@prisma/client";
-import { generateAuthToken, comparePassword } from "../utils/auth.util.js"; // Adjust path if needed
+import { generateAuthToken, comparePassword, hashPassword } from "../utils/auth.util.js"; // Adjust path if needed
 
 /**
  * Standard Credential Verification
@@ -60,7 +60,7 @@ export const initQRLogin = async (metadata) => {
     deviceInfo: metadata?.ua ?? null,
   };
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 5; i++) {
     try {
       return await prisma.qRCode.create({ data });
     } catch (e) {
@@ -105,6 +105,34 @@ export const finalizeQRLogin = async (sessionId, userId) => {
   getIO().to(sessionId).emit("qr:authorized", { token });
 
   return { success: true };
+};
+
+/**
+ * Handles the logic of updating a user's password in the database.
+ * This is called only after the OTP has been successfully verified.
+ */
+export const updatePasswordAfterReset = async (email, newPassword, confirmPassword) => {
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Backend Security: Ensure passwords match even if the frontend was bypassed
+  if (newPassword !== confirmPassword) {
+    const error = new Error("Passwords do not match.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (newPassword.length < 8) {
+    const error = new Error("Password must be at least 8 characters long.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const hashedPassword = await hashPassword(newPassword);
+
+  return await prisma.user.update({
+    where: { email: normalizedEmail },
+    data: { password: hashedPassword },
+  });
 };
 
 export const getUserProfile = async (userId) => {

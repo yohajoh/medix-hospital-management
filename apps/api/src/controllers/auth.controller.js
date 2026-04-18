@@ -233,6 +233,65 @@ const login = async (req, res) => {
 };
 
 /**
+ * @desc Phase 1: Request a password reset code
+ */
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: "Email is required." });
+
+    // Use the flexible service with the PASSWORD_RESET purpose
+    const result = await OTPService.requestLoginOTP(email, "PASSWORD_RESET");
+
+    if (!result.success) {
+      return res.status(result.status).json({ success: false, message: result.message });
+    }
+
+    return res.status(200).json({ success: true, message: "A recovery code has been sent." });
+  } catch (error) {
+    console.error("Forgot Password Controller Error:", error);
+    return res.status(500).json({ success: false, message: "Internal server error." });
+  }
+};
+
+/**
+ * @desc Phase 2: Verify code and update the password
+ */
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword, confirmPassword } = req.body;
+
+    if (!email || !otp || !newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, message: "Missing required fields." });
+    }
+
+    // 1. Verify the OTP (Logic inside OTP Service)
+    const verification = await OTPService.verifyLoginOTP(email, otp, "PASSWORD_RESET");
+
+    if (!verification.success) {
+      return res.status(verification.status).json({
+        success: false,
+        message: verification.message,
+      });
+    }
+
+    // 2. Perform the Update (Logic inside Auth Service)
+    await authService.updatePasswordAfterReset(email, newPassword, confirmPassword);
+
+    return res.status(200).json({
+      success: true,
+      message: "Password successfully updated. Please login.",
+    });
+  } catch (error) {
+    console.error("Reset Password Controller Error:", error);
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Failed to update password.",
+    });
+  }
+};
+
+/**
  * @desc Get Profile
  */
 const getMe = async (req, res) => {

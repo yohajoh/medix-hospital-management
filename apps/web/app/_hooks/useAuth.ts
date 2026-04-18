@@ -72,39 +72,78 @@ export const useAuth = () => {
    * Step 1: Request the OTP code
    * Called from the main Login page
    */
-  const handleOTPRequest = async (e?: React.FormEvent) => {
+  // const handleOTPRequest = async (e?: React.FormEvent, manualIdentifier?: string) => {
+  //   if (e) e.preventDefault();
+
+  //   // Use the manual identifier (from URL) or the state identifier (from login form)
+  //   const target = manualIdentifier || identifier;
+
+  //   if (!target) {
+  //     setError("Please enter your email or phone number first.");
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+  //   setLoadingType("otp");
+  //   setError(null);
+
+  //   try {
+  //     const response = await fetch(`${API_URL}/auth/otp/request`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ identifier: target }), // Use the 'target' variable
+  //     });
+
+  //     const data = await response.json();
+
+  //     if (!response.ok) {
+  //       throw new Error(data.message || "Failed to send verification code.");
+  //     }
+
+  //     // Success: Code sent! Now navigate to the verification input page
+  //     // We pass the identifier in the URL query so the verify page knows who to verify
+  //     router.push(`/auth/verify-otp?target=${encodeURIComponent(identifier)}`);
+  //   } catch (err: any) {
+  //     setError(err.message);
+  //   } finally {
+  //     setIsLoading(false);
+  //     setLoadingType(null);
+  //   }
+  // };
+
+  const handleOTPRequest = async (e?: React.FormEvent, manualIdentifier?: string) => {
     if (e) e.preventDefault();
 
-    if (!identifier) {
+    const target = manualIdentifier || identifier;
+
+    if (!target) {
       setError("Please enter your email or phone number first.");
       return;
     }
 
     setIsLoading(true);
-    setLoadingType("otp");
     setError(null);
 
     try {
       const response = await fetch(`${API_URL}/auth/otp/request`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier }),
+        body: JSON.stringify({ identifier: target }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to send verification code.");
-      }
+      if (!response.ok) throw new Error(data.message || "Failed to send code.");
 
-      // Success: Code sent! Now navigate to the verification input page
-      // We pass the identifier in the URL query so the verify page knows who to verify
-      router.push(`/auth/verify-otp?target=${encodeURIComponent(identifier)}`);
+      // IMPORTANT: Re-attach the target to the URL so it doesn't disappear
+      router.push(`/auth/verify-otp?target=${encodeURIComponent(target)}`);
+
+      return { success: true };
     } catch (err: any) {
       setError(err.message);
+      return { success: false };
     } finally {
       setIsLoading(false);
-      setLoadingType(null);
     }
   };
 

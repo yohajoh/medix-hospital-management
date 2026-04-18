@@ -172,7 +172,7 @@ export default function LoginPage() {
 
             <p className="text-center mt-auto pt-6 text-xs text-gray-400 font-medium tracking-tight">
               New patient?{" "}
-              <Link href="/register" className="text-[#1A4F95] font-bold hover:underline">
+              <Link href="/auth/signup" className="text-[#1A4F95] font-bold hover:underline">
                 Register for Portal Access
               </Link>
             </p>
