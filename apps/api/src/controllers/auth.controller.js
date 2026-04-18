@@ -235,7 +235,7 @@ const login = async (req, res) => {
 /**
  * @desc Phase 1: Request a password reset code
  */
-export const forgotPassword = async (req, res) => {
+const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ success: false, message: "Email is required." });
@@ -257,7 +257,7 @@ export const forgotPassword = async (req, res) => {
 /**
  * @desc Phase 2: Verify code and update the password
  */
-export const resetPassword = async (req, res) => {
+const resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword, confirmPassword } = req.body;
 
@@ -319,4 +319,14 @@ const getMe = async (req, res) => {
   }
 };
 
-export { initiateGoogleAuth, googleCallback, requestCalendarAccess, login, requestLoginOTP, verifyOTPAndLogin, getMe };
+export {
+  initiateGoogleAuth,
+  googleCallback,
+  requestCalendarAccess,
+  login,
+  requestLoginOTP,
+  verifyOTPAndLogin,
+  forgotPassword,
+  resetPassword,
+  getMe,
+};

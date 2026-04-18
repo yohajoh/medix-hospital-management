@@ -9,6 +9,7 @@ import { useAuth } from "@/app/_hooks/useAuth";
 function VerifyOTPContent() {
   const searchParams = useSearchParams();
   const target = searchParams.get("target") || "Clinical User";
+  const mode = searchParams.get("mode") || ""; // Could be 'email' or 'phone'
 
   const { handleOTPVerify, handleOTPRequest, isLoading, error } = useAuth();
   const [timeLeft, setTimeLeft] = useState(299); // 5 minutes
@@ -27,7 +28,7 @@ function VerifyOTPContent() {
   };
 
   const onCodeComplete = (code: string) => {
-    handleOTPVerify(code, target);
+    handleOTPVerify(code, target, mode);
   };
 
   const handleResend = async () => {

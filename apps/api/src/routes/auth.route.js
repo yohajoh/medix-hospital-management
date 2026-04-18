@@ -9,6 +9,8 @@ import {
   approveQR,
   requestLoginOTP, // New
   verifyOTPAndLogin, // New
+  forgotPassword,
+  resetPassword,
 } from "../controllers/auth.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 
@@ -53,5 +55,8 @@ router.get("/qr/generate", getQR);
  * @access Private (Requires mobile app authentication)
  */
 router.post("/qr/approve", protect, approveQR);
+
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 export default router;

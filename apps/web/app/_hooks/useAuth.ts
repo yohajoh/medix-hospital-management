@@ -151,7 +151,7 @@ export const useAuth = () => {
    * Step 2: Verify the code and Login
    * Called from the Verify OTP Page
    */
-  const handleOTPVerify = async (otpCode: string, target: string) => {
+  const handleOTPVerify = async (otpCode: string, target: string, mode: string | null) => {
     setIsLoading(true);
     setError(null);
 
@@ -168,14 +168,88 @@ export const useAuth = () => {
         throw new Error(data.message || "Invalid or expired code.");
       }
 
-      // Success: Session cookie is set by server, go to dashboard
-      router.push("/dashboard");
+      // --- DYNAMIC REDIRECTION LOGIC ---
+      if (mode === "reset") {
+        // Redirect to new-password page with context
+        // We include the code so the next page can use it for the final update
+        router.push(`/auth/reset-password?target=${encodeURIComponent(target)}&code=${otpCode}`);
+      } else {
+        // Standard login success
+        router.push("/dashboard");
+      }
+
+      return true; // Verification successful
     } catch (err: any) {
       setError(err.message);
       setIsLoading(false);
-      return false; // Return false so the UI component can reset
+      return false;
     }
   };
+
+  // Add this inside your useAuth hook
+  const handleForgotPasswordRequest = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!identifier) {
+      setError("Please enter your credentials.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: identifier }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Request failed");
+
+      // Pass 'mode=reset' so the OTP page knows to redirect to 'new-password' after success
+      router.push(`/auth/verify-otp?target=${encodeURIComponent(identifier)}&mode=reset`);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFinalPasswordReset = async (email: string, otp: string, newPassword: string, confirmPassword: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          otp,
+          newPassword,
+          confirmPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Password reset failed.");
+      }
+
+      // Success: Redirect to login with a success toast/query param
+      router.push("/auth/login?reset=success");
+      return { success: true };
+    } catch (err: any) {
+      setError(err.message);
+      return { success: false };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Add handleFinalPasswordReset to your return statement
 
   return {
     identifier,
@@ -189,5 +263,7 @@ export const useAuth = () => {
     handleGoogleLogin,
     handleOTPRequest,
     handleOTPVerify,
+    handleForgotPasswordRequest,
+    handleFinalPasswordReset,
   };
 };
