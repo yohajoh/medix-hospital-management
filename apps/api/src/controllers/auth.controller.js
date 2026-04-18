@@ -2,6 +2,31 @@ import { google } from "googleapis";
 import { oauth2Client, SCOPES } from "../config/google.config.js";
 import { prisma } from "../lib/prisma.js";
 import { generateAuthToken } from "../utils/auth.util.js";
+import * as authService from "../services/auth.service.js";
+
+// DESKTOP: Generate QR
+export const getQR = async (req, res, next) => {
+  try {
+    const session = await authService.initQRLogin({
+      ip: req.ip,
+      ua: req.headers["user-agent"],
+    });
+    res.json({ sessionId: session.sessionId });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// MOBILE: Approve Scan
+export const approveQR = async (req, res, next) => {
+  try {
+    const { sessionId } = req.body;
+    await authService.finalizeQRLogin(sessionId, req.user.id);
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
 
 /**
  * Step 1: Standard Login (Authentication Only)
