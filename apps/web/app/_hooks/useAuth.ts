@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-// Define the types of loading states
 export type LoadingType = "normal" | "google" | "otp" | null;
 
 export const useAuth = () => {
@@ -12,10 +11,15 @@ export const useAuth = () => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingType, setLoadingType] = useState<LoadingType>(null); // New state
+  const [loadingType, setLoadingType] = useState<LoadingType>(null);
   const [error, setError] = useState<string | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+  /**
+   * Helper to map URL 'mode' to Backend 'purpose'
+   */
+  const getPurpose = (mode: string | null) => (mode === "reset" ? "PASSWORD_RESET" : "LOGIN");
 
   const handleNormalLogin = async (e: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -36,14 +40,12 @@ export const useAuth = () => {
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Unauthorized access.");
-      }
+      if (!response.ok) throw new Error(data.message || "Unauthorized access.");
 
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "Connection to clinical server failed.");
+    } finally {
       setIsLoading(false);
       setLoadingType(null);
     }
@@ -56,64 +58,20 @@ export const useAuth = () => {
     try {
       const response = await fetch(`${API_URL}/auth/google`);
       const { url } = await response.json();
-
-      if (url) {
-        window.location.href = url;
-      } else {
-        throw new Error("Could not retrieve authentication URL.");
-      }
+      if (url) window.location.href = url;
+      else throw new Error("Could not retrieve authentication URL.");
     } catch (err) {
       setError("Google SSO is currently unavailable.");
       setIsLoading(false);
       setLoadingType(null);
     }
   };
+
   /**
-   * Step 1: Request the OTP code
-   * Called from the main Login page
+   * Request OTP (Handles Login Resend and Forgot Password Resend)
    */
-  // const handleOTPRequest = async (e?: React.FormEvent, manualIdentifier?: string) => {
-  //   if (e) e.preventDefault();
-
-  //   // Use the manual identifier (from URL) or the state identifier (from login form)
-  //   const target = manualIdentifier || identifier;
-
-  //   if (!target) {
-  //     setError("Please enter your email or phone number first.");
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-  //   setLoadingType("otp");
-  //   setError(null);
-
-  //   try {
-  //     const response = await fetch(`${API_URL}/auth/otp/request`, {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ identifier: target }), // Use the 'target' variable
-  //     });
-
-  //     const data = await response.json();
-
-  //     if (!response.ok) {
-  //       throw new Error(data.message || "Failed to send verification code.");
-  //     }
-
-  //     // Success: Code sent! Now navigate to the verification input page
-  //     // We pass the identifier in the URL query so the verify page knows who to verify
-  //     router.push(`/auth/verify-otp?target=${encodeURIComponent(identifier)}`);
-  //   } catch (err: any) {
-  //     setError(err.message);
-  //   } finally {
-  //     setIsLoading(false);
-  //     setLoadingType(null);
-  //   }
-  // };
-
-  const handleOTPRequest = async (e?: React.FormEvent, manualIdentifier?: string) => {
+  const handleOTPRequest = async (e?: React.FormEvent, manualIdentifier?: string, mode: string | null = null) => {
     if (e) e.preventDefault();
-
     const target = manualIdentifier || identifier;
 
     if (!target) {
@@ -128,15 +86,18 @@ export const useAuth = () => {
       const response = await fetch(`${API_URL}/auth/otp/request`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: target }),
+        body: JSON.stringify({
+          identifier: target,
+          purpose: getPurpose(mode), // Map mode to purpose for the backend
+        }),
       });
 
       const data = await response.json();
-
       if (!response.ok) throw new Error(data.message || "Failed to send code.");
 
-      // IMPORTANT: Re-attach the target to the URL so it doesn't disappear
-      router.push(`/auth/verify-otp?target=${encodeURIComponent(target)}`);
+      // Re-attach target and mode to preserve state
+      const modeQuery = mode ? `&mode=${mode}` : "";
+      router.push(`/auth/verify-otp?target=${encodeURIComponent(target)}${modeQuery}`);
 
       return { success: true };
     } catch (err: any) {
@@ -148,8 +109,7 @@ export const useAuth = () => {
   };
 
   /**
-   * Step 2: Verify the code and Login
-   * Called from the Verify OTP Page
+   * Verify OTP (Handles both Login and Reset redirections)
    */
   const handleOTPVerify = async (otpCode: string, target: string, mode: string | null) => {
     setIsLoading(true);
@@ -159,26 +119,23 @@ export const useAuth = () => {
       const response = await fetch(`${API_URL}/auth/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: target, otp: otpCode }),
+        body: JSON.stringify({
+          identifier: target,
+          otp: otpCode,
+          purpose: getPurpose(mode), // Map mode to purpose so DB finds the record
+        }),
       });
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Invalid or expired code.");
 
-      if (!response.ok) {
-        throw new Error(data.message || "Invalid or expired code.");
-      }
-
-      // --- DYNAMIC REDIRECTION LOGIC ---
       if (mode === "reset") {
-        // Redirect to new-password page with context
-        // We include the code so the next page can use it for the final update
         router.push(`/auth/reset-password?target=${encodeURIComponent(target)}&code=${otpCode}`);
       } else {
-        // Standard login success
         router.push("/dashboard");
       }
 
-      return true; // Verification successful
+      return true;
     } catch (err: any) {
       setError(err.message);
       setIsLoading(false);
@@ -186,7 +143,9 @@ export const useAuth = () => {
     }
   };
 
-  // Add this inside your useAuth hook
+  /**
+   * Initial Forgot Password Request
+   */
   const handleForgotPasswordRequest = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!identifier) {
@@ -207,7 +166,7 @@ export const useAuth = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Request failed");
 
-      // Pass 'mode=reset' so the OTP page knows to redirect to 'new-password' after success
+      // Set mode=reset here
       router.push(`/auth/verify-otp?target=${encodeURIComponent(identifier)}&mode=reset`);
     } catch (err: any) {
       setError(err.message);
@@ -233,12 +192,8 @@ export const useAuth = () => {
       });
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Password reset failed.");
 
-      if (!response.ok) {
-        throw new Error(data.message || "Password reset failed.");
-      }
-
-      // Success: Redirect to login with a success toast/query param
       router.push("/auth/login?reset=success");
       return { success: true };
     } catch (err: any) {
@@ -249,15 +204,13 @@ export const useAuth = () => {
     }
   };
 
-  // Add handleFinalPasswordReset to your return statement
-
   return {
     identifier,
     setIdentifier,
     password,
     setPassword,
     isLoading,
-    loadingType, // Exported to differentiate buttons
+    loadingType,
     error,
     handleNormalLogin,
     handleGoogleLogin,

@@ -5,9 +5,12 @@ export const OTPService = {
   /**
    * Core Logic: Check if user exists and send OTP
    */
-  requestLoginOTP: async (identifier, purpose) => {
+  requestLoginOTP: async (identifier, purpose = "LOGIN") => {
+    // 1. Normalize identifier immediately
+    const normalizedTarget = identifier.toLowerCase().trim();
+
     const user = await prisma.user.findFirst({
-      where: { OR: [{ email: identifier }, { phone: identifier }] },
+      where: { OR: [{ email: normalizedTarget }, { phone: normalizedTarget }] },
     });
 
     if (!user) return { success: false, status: 404, message: "Account not found." };
@@ -15,37 +18,39 @@ export const OTPService = {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
+    // 2. Use normalized target for the composite key
     await prisma.verificationToken.upsert({
       where: {
         target_purpose: {
-          target: identifier,
+          target: normalizedTarget,
           purpose: purpose,
         },
       },
       update: {
         token: otp,
         expiresAt,
-        createdAt: new Date(), // Force update the timestamp to now
+        createdAt: new Date(),
       },
       create: {
-        target: identifier,
+        target: normalizedTarget,
         token: otp,
         expiresAt,
         purpose,
       },
     });
 
-    await MailService.sendOTP(identifier, otp, purpose);
+    await MailService.sendOTP(normalizedTarget, otp, purpose);
     return { success: true };
   },
 
   /**
    * Core Logic: Validate OTP and fetch user
    */
-  verifyLoginOTP: async (identifier, otp, purpose) => {
-    // Always normalize the identifier (lowercase) to prevent casing issues
+  verifyLoginOTP: async (identifier, otp, purpose = "LOGIN") => {
+    // 1. Normalize identifier immediately
     const normalizedTarget = identifier.toLowerCase().trim();
 
+    // 2. Search using the same normalized identifier used during creation
     const record = await prisma.verificationToken.findUnique({
       where: {
         target_purpose: {
@@ -54,9 +59,6 @@ export const OTPService = {
         },
       },
     });
-
-    // Log for debugging (Remove in production)
-    console.log(`Verifying: ${otp} against DB token: ${record?.token}`);
 
     if (!record) {
       return { success: false, status: 401, message: "No active code found for this user." };

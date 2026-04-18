@@ -30,31 +30,79 @@ const requestLoginOTP = async (req, res) => {
 /**
  * @desc Verify OTP & Login (Step 2)
  */
+// const verifyOTPAndLogin = async (req, res) => {
+//   try {
+//     const { identifier, otp } = req.body;
+//     if (!identifier || !otp) return res.status(400).json({ success: false, message: "Credentials missing" });
+
+//     const result = await OTPService.verifyLoginOTP(identifier, otp, OTPPurpose.LOGIN);
+
+//     if (!result.success) {
+//       return res.status(result.status).json({ success: false, message: result.message });
+//     }
+
+//     // Standardize user data through authService helper
+//     const userProfile = await authService.getUserProfile(result.user.id);
+//     const token = generateAuthToken(result.user.id, result.user.role);
+
+//     res.cookie("token", token, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: "Lax",
+//       maxAge: 7 * 24 * 60 * 60 * 1000,
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       user: userProfile,
+//     });
+//   } catch (error) {
+//     console.error("Verify OTP Controller Error:", error);
+//     return res.status(500).json({ success: false, message: "Internal server error" });
+//   }
+// };
+
 const verifyOTPAndLogin = async (req, res) => {
   try {
-    const { identifier, otp } = req.body;
-    if (!identifier || !otp) return res.status(400).json({ success: false, message: "Credentials missing" });
+    // 1. Extract purpose from req.body (defaulting to LOGIN if not provided)
+    const { identifier, otp, purpose } = req.body;
 
-    const result = await OTPService.verifyLoginOTP(identifier, otp, OTPPurpose.LOGIN);
+    if (!identifier || !otp) {
+      return res.status(400).json({ success: false, message: "Credentials missing" });
+    }
+
+    // 2. Pass the purpose dynamically to the service
+    // We use purpose || OTPPurpose.LOGIN to handle standard logins safely
+    const result = await OTPService.verifyLoginOTP(identifier, otp, purpose || OTPPurpose.LOGIN);
 
     if (!result.success) {
       return res.status(result.status).json({ success: false, message: result.message });
     }
 
-    // Standardize user data through authService helper
-    const userProfile = await authService.getUserProfile(result.user.id);
-    const token = generateAuthToken(result.user.id, result.user.role);
+    // 3. Logic for standard Login (if purpose is LOGIN or not provided)
+    // If the purpose is PASSWORD_RESET, we don't necessarily want to set a login cookie yet
+    if (!purpose || purpose === OTPPurpose.LOGIN) {
+      const userProfile = await authService.getUserProfile(result.user.id);
+      const token = generateAuthToken(result.user.id, result.user.role);
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
+      return res.status(200).json({
+        success: true,
+        user: userProfile,
+      });
+    }
+
+    // 4. Logic for Password Reset (Success but no login)
+    // We just return success so the frontend knows the OTP was valid
     return res.status(200).json({
       success: true,
-      user: userProfile,
+      message: "Identity verified successfully.",
     });
   } catch (error) {
     console.error("Verify OTP Controller Error:", error);
