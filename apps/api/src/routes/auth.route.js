@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  login,
   initiateGoogleAuth,
   googleCallback,
   requestCalendarAccess,
@@ -10,6 +11,12 @@ import {
 import { protect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
+
+/**
+ * @desc Standard Form Login
+ * @access Public
+ */
+router.post("/login", login);
 
 // --- Standard Google OAuth Routes ---
 router.get("/google", initiateGoogleAuth);

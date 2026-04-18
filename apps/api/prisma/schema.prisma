@@ -1,3 +1,4 @@
+
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
@@ -8,7 +9,6 @@ datasource db {
 }
 
 // --- ENUMS ---
-
 enum UserRole {
   PATIENT
   DOCTOR
@@ -69,8 +69,8 @@ model QRCode {
   isUsed       Boolean   @default(false)
   isApproved   Boolean   @default(false)
   
-  // Metadata for security (optional but recommended)
-  deviceInfo   String?   // e.g., "Chrome on Android"
+  // Metadata for security
+  deviceInfo   String?   
   ipAddress    String?
 
   expiresAt    DateTime
@@ -87,7 +87,7 @@ model Notification {
   
   title     String
   message   String
-  type      String   // e.g., "APPOINTMENT", "LAB_RESULT", "SYSTEM"
+  type      String   
   isRead    Boolean  @default(false)
 
   createdAt DateTime @default(now())

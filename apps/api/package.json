@@ -16,9 +16,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@repo/validators": "workspace:*",
     "@prisma/adapter-pg": "^7.7.0",
-    "@prisma/client": "^7.7.0",
+    "@repo/validators": "workspace:*",
     "bcryptjs": "^3.0.3",
     "cookie": "^1.1.1",
     "cookie-parser": "^1.4.7",
@@ -31,9 +30,11 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
+    "@prisma/client": "^7.7.0",
     "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-import": "^2.32.0",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "prisma": "^7.7.0"
   }
 }

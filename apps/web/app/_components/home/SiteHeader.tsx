@@ -1,17 +1,19 @@
+"use client"; // Required for useRouter
+
 import type { JSX } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"; // Import the router hook
 
 interface SiteHeaderProps {
   navItems: string[];
 }
 
 export function SiteHeader({ navItems }: SiteHeaderProps): JSX.Element {
-  const router = useRouter();
+  const router = useRouter(); // Initialize the router
 
-  function handleLogoClick() {
+  const handleLoginRedirect = () => {
     router.push("/auth/login");
-  }
+  };
 
   return (
     <header className="sticky top-0 z-20 border-b border-(--ca-border) bg-(--ca-surface)/95 backdrop-blur">
@@ -36,16 +38,18 @@ export function SiteHeader({ navItems }: SiteHeaderProps): JSX.Element {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* UPDATED: Changed from Link to a Button with programmatic navigation */}
           <button
-            onClick={handleLogoClick}
             type="button"
-            className="inline-flex h-10 items-center rounded-lg border border-(--ca-border) bg-(--ca-surface-soft) px-4 text-sm font-medium text-(--ca-text-muted) cursor-pointer"
+            onClick={handleLoginRedirect}
+            className="inline-flex h-10 items-center rounded-lg border border-(--ca-border) bg-(--ca-surface-soft) px-4 text-sm font-medium text-(--ca-text-muted) hover:text-(--ca-text) transition-colors cursor-pointer"
           >
             Login
           </button>
+
           <button
             type="button"
-            className="inline-flex h-10 items-center rounded-lg border border-[#3a5e86] bg-(--ca-brand-900) px-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(8,30,56,0.25)] cursor-pointer"
+            className="inline-flex h-10 items-center rounded-lg border border-[#3a5e86] bg-(--ca-brand-900) px-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(8,30,56,0.25)] cursor-pointer hover:bg-[#2d4a6b] transition-all"
           >
             Request Demo
           </button>

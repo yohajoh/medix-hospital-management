@@ -1,39 +1,52 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { useRouter } from "next/navigation";
 
 export const useQRLogin = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const router = useRouter();
+  const hasCalled = useRef(false);
 
   useEffect(() => {
+    if (hasCalled.current) return;
+    hasCalled.current = true;
+
+    let socket: any;
+
     const fetchQR = async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/qr/generate`);
+      console.log("Fetching QR...");
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/qr/generate`);
       const data = await res.json();
+
+      console.log("Session ID:", data.sessionId);
+
       setSessionId(data.sessionId);
 
-      // Connect to Socket
-      const socket = io(process.env.NEXT_PUBLIC_API_URL!, { withCredentials: true });
+      socket = io(process.env.NEXT_PUBLIC_API_URL!, { withCredentials: true });
 
       socket.emit("qr:join-session", data.sessionId);
 
       socket.on("qr:authorized", ({ token }) => {
-        const DAYS_TO_PERSIST = 7;
-        const expires = new Date();
-        expires.setDate(expires.getDate() + DAYS_TO_PERSIST);
+        console.log("Authorized. Token received.");
 
-        // This line handles the persistence logic
+        const expires = new Date();
+        expires.setDate(expires.getDate() + 7);
+
         document.cookie = `token=${token}; Path=/; Expires=${expires.toUTCString()}; SameSite=Lax; ${
           process.env.NODE_ENV === "production" ? "Secure" : ""
         }`;
 
         router.push("/dashboard");
       });
-
-      return () => socket.disconnect();
     };
 
     fetchQR();
+
+    return () => {
+      if (socket) socket.disconnect();
+      console.log("Socket disconnected");
+    };
   }, [router]);
 
   return { sessionId };

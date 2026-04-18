@@ -5,15 +5,18 @@ import { generateAuthToken } from "../utils/auth.util.js";
 import * as authService from "../services/auth.service.js";
 
 // DESKTOP: Generate QR
-export const getQR = async (req, res, next) => {
+export const getQR = async (req, res) => {
   try {
-    const session = await authService.initQRLogin({
-      ip: req.ip,
-      ua: req.headers["user-agent"],
-    });
-    res.json({ sessionId: session.sessionId });
-  } catch (err) {
-    next(err);
+    const qr = await authService.initQRLogin(req.metadata);
+
+    if (!qr) {
+      return res.status(500).json({ error: "QR generation failed" });
+    }
+
+    res.json({ sessionId: qr.sessionId });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -124,33 +127,78 @@ const googleCallback = async (req, res) => {
 };
 
 /**
- * @desc Get Profile
+ * @desc Standard Form Login (Email/Username/phone + Password)
  */
-const getMe = async (req, res) => {
+export const login = async (req, res) => {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
-    });
+    const { identifier, password } = req.body;
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+    if (!identifier || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide both identifier and password.",
+      });
     }
 
-    res.status(200).json({
+    // Call the service to handle the logic
+    const { token, user } = await authService.verifyCredentials(identifier, password);
+
+    // Set the cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return res.status(200).json({
       success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        calendarConnected: user.calendarConnected,
-        status: user.status,
-        createdAt: user.createdAt,
-      },
+      message: "Logged in successfully",
+      user,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error" });
+    // Handle the specific error thrown by the service
+    if (error.message === "Invalid credentials") {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid clinical credentials.",
+      });
+    }
+
+    console.error("Login Controller Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
 
-export { initiateGoogleAuth, googleCallback, requestCalendarAccess, getMe };
+/**
+ * @desc Get Profile
+ */
+export const getMe = async (req, res) => {
+  try {
+    // req.user.id comes from your 'protect' middleware
+    const userProfile = await authService.getUserProfile(req.user.id);
+
+    if (!userProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: userProfile,
+    });
+  } catch (error) {
+    console.error("GetMe Controller Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+export { initiateGoogleAuth, googleCallback, requestCalendarAccess, login, getMe };

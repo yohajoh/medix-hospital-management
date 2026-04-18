@@ -36,6 +36,8 @@ app.use("/api/auth", authRoutes);
 
 // 7. Global Error Handler (Real-world necessity)
 app.use((err, req, res, next) => {
+  console.error(err.stack); // Look at your console for the real error!
+
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
     success: false,
