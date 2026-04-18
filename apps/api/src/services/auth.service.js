@@ -1,4 +1,4 @@
-import prisma from "../lib/prisma.js";
+import {prisma} from "../lib/prisma.js";
 import { getIO } from "../lib/socket.js";
 import jwt from "jsonwebtoken";
 

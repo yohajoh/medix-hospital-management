@@ -18,8 +18,15 @@ export const useQRLogin = () => {
       socket.emit("qr:join-session", data.sessionId);
 
       socket.on("qr:authorized", ({ token }) => {
-        // Handle successful login
-        document.cookie = `token=${token}; path=/; samesite=lax`;
+        const DAYS_TO_PERSIST = 7;
+        const expires = new Date();
+        expires.setDate(expires.getDate() + DAYS_TO_PERSIST);
+
+        // This line handles the persistence logic
+        document.cookie = `token=${token}; Path=/; Expires=${expires.toUTCString()}; SameSite=Lax; ${
+          process.env.NODE_ENV === "production" ? "Secure" : ""
+        }`;
+
         router.push("/dashboard");
       });
 

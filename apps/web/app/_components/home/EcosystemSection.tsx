@@ -19,7 +19,10 @@ export function EcosystemSection({ cards }: EcosystemSectionProps): JSX.Element 
 
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
           {cards.map((card) => (
-            <article key={card.title} className="rounded-2xl border border-[var(--ca-border)] bg-[var(--ca-surface)] p-5">
+            <article
+              key={card.title}
+              className="rounded-2xl border border-[var(--ca-border)] bg-[var(--ca-surface)] p-5"
+            >
               <div className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--ca-surface-soft)] text-xl">
                 {card.icon}
               </div>

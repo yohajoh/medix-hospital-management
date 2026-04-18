@@ -27,7 +27,8 @@ export function SiteFooter(): JSX.Element {
           <div>
             <h3 className="text-4xl font-black tracking-[-0.03em]">Clinical Architect</h3>
             <p className="mt-3 text-sm leading-7 text-(--ca-footer-subtext)">
-              Empowering clinicians with high-fidelity intelligence systems for better outcomes and operational precision.
+              Empowering clinicians with high-fidelity intelligence systems for better outcomes and operational
+              precision.
             </p>
           </div>
 
