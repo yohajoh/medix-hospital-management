@@ -14,7 +14,7 @@ const corsOptions = {
   // Use an array to allow both local development and your production Render URL
   origin: [
     "http://localhost:3000",
-    "https://medix-frontend.onrender.com", // Replace with your actual Render frontend URL
+    "https://medix-web-hy4w.onrender.com", // Replace with your actual Render frontend URL
     process.env.FRONTEND_URL,
   ].filter(Boolean), // Removes undefined/null values
 
