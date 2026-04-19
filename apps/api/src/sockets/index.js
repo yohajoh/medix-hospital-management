@@ -25,6 +25,9 @@ export const initSocket = (httpServer) => {
     try {
       const headerCookie = socket.handshake.headers.cookie;
 
+      // ADD THIS LOG
+      console.log(`Checking Auth for ${socket.id}. Cookie Header present: ${!!headerCookie}`);
+
       if (!headerCookie) {
         socket.user = null;
         return next();
