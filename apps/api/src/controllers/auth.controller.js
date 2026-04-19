@@ -131,18 +131,28 @@ export const getQR = async (req, res) => {
 export const approveQR = async (req, res, next) => {
   try {
     const { sessionId } = req.body;
-    // req.user is already there because of your 'Authenticated: true' logs
+
+    // Safety check for sessionId
+    if (!sessionId) {
+      return res.status(400).json({ success: false, message: "Session ID is missing" });
+    }
+
     const result = await authService.finalizeQRLogin(sessionId, req.user.id);
 
-    // Return the user data so the mobile frontend 'result.success' works
-    res.json({
+    // Success must return JSON
+    return res.status(200).json({
       success: true,
       user: req.user,
       message: "Authorized",
     });
   } catch (err) {
-    // If finalizeQRLogin throws "Invalid session", it lands here
-    res.status(400).json({ success: false, message: err.message });
+    console.error("QR Approval Error:", err.message);
+
+    // CRITICAL: Ensure errors return JSON, not an HTML error page
+    return res.status(err.status || 500).json({
+      success: false,
+      message: err.message || "Internal Server Error",
+    });
   }
 };
 
