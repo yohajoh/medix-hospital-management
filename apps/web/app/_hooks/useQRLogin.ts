@@ -4,10 +4,56 @@ import { useRouter } from "next/navigation";
 
 export const useQRLogin = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false); // Track mobile scan status
   const router = useRouter();
   const hasCalled = useRef(false);
 
+  const getApiUrl = () => {
+    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      if (host.includes("onrender.com") || host === "your-domain.com") {
+        return "https://medix-api-re2o.onrender.com/api";
+      }
+    }
+    return "http://localhost:5000/api";
+  };
+
+  const API_URL = getApiUrl();
+
+  /**
+   * NEW: FLEXIBLE SCAN VERIFICATION LOGIC
+   * Call this from your /auth/scan page.
+   */
+  const verifyScannerSession = async (sid: string, endpoint: string = "/auth/qr/verify") => {
+    setIsVerifying(true);
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: sid }),
+        credentials: "include", // Required to send the mobile user's session
+      });
+
+      const data = await response.json();
+      return { success: response.ok, data };
+    } catch (err) {
+      console.error("Scan Error:", err);
+      return { success: false, message: "Network error" };
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  /**
+   * EXISTING: QR GENERATION & SOCKET LISTENER
+   * Logic remains untouched, only optimized for Production stability.
+   */
   useEffect(() => {
+    // Only run the socket listener on the login page
+    if (typeof window !== "undefined" && window.location.pathname !== "/auth/login") return;
+
     if (hasCalled.current) return;
     hasCalled.current = true;
 
@@ -16,38 +62,49 @@ export const useQRLogin = () => {
     const fetchQR = async () => {
       console.log("Fetching QR...");
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/qr/generate`);
-      const data = await res.json();
+      try {
+        const res = await fetch(`${API_URL}/auth/qr/generate`);
+        const data = await res.json();
 
-      console.log("Session ID:", data.sessionId);
+        console.log("Session ID:", data.sessionId);
+        setSessionId(data.sessionId);
 
-      setSessionId(data.sessionId);
+        // Optimization: websocket only transport to prevent Render.com network errors
+        socket = io(API_URL.replace("/api", ""), {
+          withCredentials: true,
+          transports: ["websocket"],
+        });
 
-      socket = io(process.env.NEXT_PUBLIC_API_URL!, { withCredentials: true });
+        socket.emit("qr:join-session", data.sessionId);
 
-      socket.emit("qr:join-session", data.sessionId);
+        socket.on("qr:authorized", ({ token }: { token: string }) => {
+          console.log("Authorized. Token received.");
 
-      socket.on("qr:authorized", ({ token }: { token: string }) => {
-        console.log("Authorized. Token received.");
+          const expires = new Date();
+          expires.setDate(expires.getDate() + 7);
 
-        const expires = new Date();
-        expires.setDate(expires.getDate() + 7);
+          // Production Fix: SameSite=None is required for cross-domain cookies on Render
+          const isProd = window.location.hostname.includes("onrender.com");
+          const cookieOptions = isProd ? "SameSite=None; Secure" : "SameSite=Lax";
 
-        document.cookie = `token=${token}; Path=/; Expires=${expires.toUTCString()}; SameSite=Lax; ${
-          process.env.NODE_ENV === "production" ? "Secure" : ""
-        }`;
+          document.cookie = `token=${token}; Path=/; Expires=${expires.toUTCString()}; ${cookieOptions}`;
 
-        router.push("/dashboard");
-      });
+          router.push("/dashboard");
+        });
+      } catch (error) {
+        console.error("QR Fetch Error:", error);
+      }
     };
 
     fetchQR();
 
     return () => {
-      if (socket) socket.disconnect();
-      console.log("Socket disconnected");
+      if (socket) {
+        socket.disconnect();
+        console.log("Socket disconnected");
+      }
     };
-  }, [router]);
+  }, [router, API_URL]);
 
-  return { sessionId };
+  return { sessionId, verifyScannerSession, isVerifying };
 };

@@ -11,11 +11,19 @@ const app = express();
 
 // 2. Define CORS Options
 const corsOptions = {
-  // Ensure this matches your Next.js URL exactly (no trailing slash)
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  // Use an array to allow both local development and your production Render URL
+  origin: [
+    "http://localhost:3000",
+    "https://medix-frontend.onrender.com", // Replace with your actual Render frontend URL
+    process.env.FRONTEND_URL,
+  ].filter(Boolean), // Removes undefined/null values
+
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true, // Required to accept HTTP-Only cookies from Next.js
+
+  // CRITICAL: This must be true for your 'token' cookie to be saved in the browser
+  credentials: true,
+
   optionsSuccessStatus: 200,
 };
 
