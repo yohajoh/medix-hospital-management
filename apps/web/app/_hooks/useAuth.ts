@@ -14,7 +14,25 @@ export const useAuth = () => {
   const [loadingType, setLoadingType] = useState<LoadingType>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const getApiUrl = () => {
+    // If the baked-in variable exists, use it
+    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+
+    // Otherwise, detect the environment dynamically
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+
+      // If we are on Render production
+      if (host.includes("onrender.com") || host === "your-domain.com") {
+        return "https://medix-api-re2o.onrender.com/api"; // HARDCODE YOUR PROD API HERE
+      }
+    }
+
+    // Local development fallback
+    return "http://localhost:5000/api";
+  };
+
+  const API_URL = getApiUrl();
 
   /**
    * Helper to map URL 'mode' to Backend 'purpose'

@@ -17,6 +17,14 @@ COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 RUN pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
+
+# --- ADDED SECTION START ---
+# Declare the argument (Render will pass this if you set it in Env vars)
+ARG NEXT_PUBLIC_API_URL
+# Set the environment variable for the build process
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# --- ADDED SECTION END ---
+
 RUN pnpm turbo run build --filter=web
 
 FROM base AS runner
