@@ -41,7 +41,8 @@ export const useQRLogin = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: sid }),
-        credentials: "include", // Essential!
+        credentials: "include", // Forces the browser to send the 'token' cookie
+        mode: "cors",
       });
 
       const data = await response.json();
