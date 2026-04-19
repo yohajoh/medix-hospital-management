@@ -12,11 +12,7 @@ const app = express();
 // 2. Define CORS Options
 const corsOptions = {
   // Use an array to allow both local development and your production Render URL
-  origin: [
-    "http://localhost:3000",
-    "https://medix-web-hy4w.onrender.com", // Replace with your actual Render frontend URL
-    process.env.FRONTEND_URL,
-  ].filter(Boolean), // Removes undefined/null values
+  origin: "https://medix-web-hy4w.onrender.com", // Replace with your actual Render frontend URL
 
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
