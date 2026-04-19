@@ -15,7 +15,6 @@ function ScanContent() {
   const [message, setMessage] = useState("");
 
   const sid = searchParams.get("sid");
-  const type = searchParams.get("type") || "login";
 
   useEffect(() => {
     const handleVerification = async () => {
@@ -25,24 +24,30 @@ function ScanContent() {
         return;
       }
 
-      const endpoint = type === "login" ? "/auth/qr/verify" : `/actions/${type}/verify`;
+      // Since backend doesn't provide 'type', we define our default behavior here
+      // If you add more features later, you can add logic here to check other params
+      const endpoint = "/auth/qr/verify";
+
+      console.log(`Attempting verification for SID: ${sid} at ${endpoint}`);
+
       const result = await verifyScannerSession(sid, endpoint);
 
       if (result.success) {
         setStatus("success");
-        setMessage(type === "login" ? "Desktop login authorized successfully!" : "Action verified successfully!");
+        setMessage("Desktop login authorized successfully!");
 
         setTimeout(() => {
           router.push("/dashboard");
         }, 2000);
       } else {
         setStatus("error");
-        setMessage(result.data?.message || "Verification failed. The session may have expired.");
+        // This is likely where your "Expired" error is coming from
+        setMessage(result.data?.message || "Verification failed. Ensure you are logged in on this device.");
       }
     };
 
     handleVerification();
-  }, [sid, type, router, verifyScannerSession]);
+  }, [sid, router, verifyScannerSession]);
 
   return (
     <div className="w-full max-w-md p-8 bg-white rounded-3xl shadow-xl border border-gray-100 text-center">
