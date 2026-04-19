@@ -2,6 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import { useRouter } from "next/navigation";
 
+type QRVerifyResult = {
+  success: boolean;
+  data: {
+    message?: string;
+    user?: unknown;
+  };
+};
+
 export const useQRLogin = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -15,7 +23,7 @@ export const useQRLogin = () => {
 
   const API_URL = getApiUrl();
   const SOCKET_URL = API_URL.replace("/api", "");
-  const verifyScannerSession = async (sid: string, endpoint: string = "/auth/qr/verify") => {
+  const verifyScannerSession = async (sid: string, endpoint: string = "/auth/qr/approve"): Promise<QRVerifyResult> => {
     setIsVerifying(true);
 
     const baseUrl = API_URL.replace(/\/$/, "");
@@ -51,11 +59,12 @@ export const useQRLogin = () => {
       } else {
         return { success: false, data: data || { message: "Auth failed" } };
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Connection lost. Please try again.";
       console.error("Verification Catch:", err);
       return {
         success: false,
-        data: { message: err.message || "Connection lost. Please try again." },
+        data: { message },
       };
     } finally {
       setIsVerifying(false);
@@ -71,7 +80,16 @@ export const useQRLogin = () => {
 
     const fetchQR = async () => {
       try {
-        const res = await fetch(`${API_URL}/auth/qr/generate`);
+        const res = await fetch(`${API_URL}/auth/qr/generate`, {
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error("Unable to initialize QR login session.");
+        }
+
         const data = await res.json();
         setSessionId(data.sessionId);
 
@@ -83,7 +101,7 @@ export const useQRLogin = () => {
         loginSocket.emit("qr:join-session", data.sessionId);
 
         // Updated event name to match backend: qr:success
-        loginSocket.on("qr:success", ({ token, user }: { token: string; user: any }) => {
+        loginSocket.on("qr:success", ({ token }: { token: string }) => {
           const expires = new Date();
           expires.setDate(expires.getDate() + 7);
           const isProd = window.location.hostname.includes("onrender.com");
@@ -101,7 +119,7 @@ export const useQRLogin = () => {
     return () => {
       loginSocket?.disconnect();
     };
-  }, [router, API_URL]);
+  }, [router, API_URL, SOCKET_URL]);
 
   return { sessionId, verifyScannerSession, isVerifying };
 };

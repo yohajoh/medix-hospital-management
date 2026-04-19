@@ -55,6 +55,7 @@ router.get("/qr/generate", getQR);
  * @access Private (Requires mobile app authentication)
  */
 router.post("/qr/approve", protect, approveQR);
+router.post("/qr/verify", protect, approveQR);
 
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);

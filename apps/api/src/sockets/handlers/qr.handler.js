@@ -33,32 +33,18 @@
 //   });
 // };
 
-// backend qr.handler.js
-import jwt from "jsonwebtoken";
-
 export const registerQRHandlers = (io, socket) => {
   socket.on("qr:join-session", (sessionId) => {
     socket.join(sessionId);
     console.log(`🖥️ Desktop [${socket.id}] joined room: ${sessionId}`);
   });
 
-  socket.on("qr:verify", ({ sessionId, userData }) => {
+  socket.on("qr:verify", ({ sessionId }) => {
     if (!socket.user) {
       console.log(`❌ Unauthorized scan attempt`);
       return;
     }
 
-    console.log(`✅ Mobile [${socket.id}] authorized Room: ${sessionId}`);
-
-    // Create a login token for the Desktop
-    const token = jwt.sign({ id: socket.user.id, email: socket.user.email }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
-
-    // Notify the desktop in that room
-    io.to(sessionId).emit("qr:success", {
-      token,
-      user: userData || socket.user,
-    });
+    console.log(`ℹ️ Mobile [${socket.id}] requested QR verification for Room: ${sessionId}`);
   });
 };

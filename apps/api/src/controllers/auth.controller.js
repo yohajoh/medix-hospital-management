@@ -137,7 +137,7 @@ export const approveQR = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Session ID is missing" });
     }
 
-    const result = await authService.finalizeQRLogin(sessionId, req.user.id);
+    await authService.finalizeQRLogin(sessionId, req.user.id);
 
     // Success must return JSON
     return res.status(200).json({

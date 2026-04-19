@@ -34,7 +34,7 @@ function ScanContent() {
 
       // 2. Execute Verification
       // This hits your backend, which then emits 'qr:success' to the desktop
-      const result = await verifyScannerSession(sid, "/auth/qr/verify");
+      const result = await verifyScannerSession(sid, "/auth/qr/approve");
 
       if (result.success) {
         setStatus("success");
