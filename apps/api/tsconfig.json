@@ -4,6 +4,6 @@
     "moduleResolution": "bundler",
     "target": "esnext",
     "strict": true,
-    "esModuleInterop": true,
+    "esModuleInterop": true
   }
 }

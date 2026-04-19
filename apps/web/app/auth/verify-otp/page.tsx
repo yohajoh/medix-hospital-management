@@ -2,19 +2,24 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { ShieldCheck, HeartPulse, HelpCircle, Timer, AlertCircle } from "lucide-react";
+import {
+  ShieldCheck,
+  HeartPulse,
+  HelpCircle,
+  Timer,
+  AlertCircle,
+} from "lucide-react";
 import OTPInput from "@/app/_components/OTPInput";
 import { useAuth } from "@/app/_hooks/useAuth";
 
 function VerifyOTPContent() {
   const searchParams = useSearchParams();
   const target = searchParams.get("target") || "Clinical User";
-  const mode = searchParams.get("mode") || ""; // Could be 'email' or 'phone'
+  const mode = searchParams.get("mode") || "";
 
   const { handleOTPVerify, handleOTPRequest, isLoading, error } = useAuth();
-  const [timeLeft, setTimeLeft] = useState(299); // 5 minutes
+  const [timeLeft, setTimeLeft] = useState(299);
 
-  // Countdown Logic
   useEffect(() => {
     if (timeLeft <= 0) return;
     const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
@@ -32,17 +37,15 @@ function VerifyOTPContent() {
   };
 
   const handleResend = async () => {
-    // We use the 'target' we already have from the URL
     const result = await handleOTPRequest(undefined, target);
 
     if (result?.success) {
-      setTimeLeft(299); // Only reset timer if the API call actually worked
+      setTimeLeft(299);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#F4F7F9] flex flex-col font-sans">
-      {/* Header */}
       <header className="px-8 py-4 flex justify-between items-center bg-white border-b border-gray-100">
         <div className="flex items-center gap-2 text-[#1A4F95] font-bold text-xl">
           <HeartPulse className="w-8 h-8" />
@@ -60,7 +63,9 @@ function VerifyOTPContent() {
             <ShieldCheck className="w-8 h-8" />
           </div>
 
-          <h1 className="text-2xl font-black text-gray-800 mb-2">Security Verification</h1>
+          <h1 className="text-2xl font-black text-gray-800 mb-2">
+            Security Verification
+          </h1>
           <p className="text-gray-500 text-sm mb-8 leading-relaxed">
             To protect patient data, we've sent a 6-digit
             <br />
@@ -69,7 +74,6 @@ function VerifyOTPContent() {
             <span className="font-bold text-[#1A4F95]">{target}</span>
           </p>
 
-          {/* Error Message Display */}
           {error && (
             <div className="mb-6 p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg flex items-center gap-2 justify-center">
               <AlertCircle className="w-4 h-4" />
@@ -82,7 +86,7 @@ function VerifyOTPContent() {
           </div>
 
           <button
-            onClick={() => {}} // Controlled by onComplete for better UX
+            onClick={() => {}}
             disabled={isLoading}
             className="w-full bg-[#1A4F95] text-white font-bold py-4 rounded-lg hover:bg-[#15407a] transition-all disabled:bg-gray-300 shadow-lg shadow-[#1A4F95]/20 mb-6"
           >
@@ -92,15 +96,20 @@ function VerifyOTPContent() {
           <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-8">
             <Timer className="w-4 h-4 text-red-500" />
             <span>
-              Code expires in <span className="font-bold text-red-500">{formatTime(timeLeft)}</span>
+              Code expires in{" "}
+              <span className="font-bold text-red-500">
+                {formatTime(timeLeft)}
+              </span>
             </span>
           </div>
 
           <div className="border-t border-gray-100 pt-8">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Didn't receive code?</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+              Didn't receive code?
+            </p>
             <button
               onClick={handleResend}
-              disabled={isLoading || timeLeft > 240} // Prevent spamming resend
+              disabled={isLoading || timeLeft > 240}
               className="text-[#1A4F95] font-black text-sm hover:underline uppercase tracking-tight disabled:text-gray-300"
             >
               Resend Code
@@ -118,7 +127,6 @@ function VerifyOTPContent() {
   );
 }
 
-// Wrap in Suspense because useSearchParams is used
 export default function VerifyOTPPage() {
   return (
     <Suspense

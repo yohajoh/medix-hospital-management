@@ -23,7 +23,10 @@ export const useQRLogin = () => {
 
   const API_URL = getApiUrl();
   const SOCKET_URL = API_URL.replace("/api", "");
-  const verifyScannerSession = async (sid: string, endpoint: string = "/auth/qr/approve"): Promise<QRVerifyResult> => {
+  const verifyScannerSession = async (
+    sid: string,
+    endpoint: string = "/auth/qr/approve",
+  ): Promise<QRVerifyResult> => {
     setIsVerifying(true);
 
     const baseUrl = API_URL.replace(/\/$/, "");
@@ -48,10 +51,11 @@ export const useQRLogin = () => {
       if (contentType && contentType.includes("application/json")) {
         data = await response.json();
       } else {
-        // If it's not JSON, read the text to see the HTML error
         const errorText = await response.text();
         console.error("Server Error HTML:", errorText);
-        throw new Error("Server error: Endpoint returned HTML instead of JSON.");
+        throw new Error(
+          "Server error: Endpoint returned HTML instead of JSON.",
+        );
       }
 
       if (response.ok) {
@@ -60,7 +64,10 @@ export const useQRLogin = () => {
         return { success: false, data: data || { message: "Auth failed" } };
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Connection lost. Please try again.";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Connection lost. Please try again.";
       console.error("Verification Catch:", err);
       return {
         success: false,
@@ -72,7 +79,11 @@ export const useQRLogin = () => {
   };
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.pathname !== "/auth/login") return;
+    if (
+      typeof window !== "undefined" &&
+      window.location.pathname !== "/auth/login"
+    )
+      return;
     if (hasCalled.current) return;
     hasCalled.current = true;
 
@@ -100,12 +111,13 @@ export const useQRLogin = () => {
 
         loginSocket.emit("qr:join-session", data.sessionId);
 
-        // Updated event name to match backend: qr:success
         loginSocket.on("qr:success", ({ token }: { token: string }) => {
           const expires = new Date();
           expires.setDate(expires.getDate() + 7);
           const isProd = window.location.hostname.includes("onrender.com");
-          const cookieOptions = isProd ? "SameSite=None; Secure" : "SameSite=Lax";
+          const cookieOptions = isProd
+            ? "SameSite=None; Secure"
+            : "SameSite=Lax";
 
           document.cookie = `token=${token}; Path=/; Expires=${expires.toUTCString()}; ${cookieOptions}`;
           router.push("/dashboard");

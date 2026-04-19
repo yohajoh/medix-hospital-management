@@ -2,7 +2,9 @@ export default function SignupPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-(--ca-page-bg) text-(--ca-text) p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-2xl font-bold mb-6 text-center">Create Your Account</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          Create Your Account
+        </h1>
         <form className="space-y-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium mb-1">
@@ -29,7 +31,10 @@ export default function SignupPage() {
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium mb-1"
+            >
               Password
             </label>
             <input

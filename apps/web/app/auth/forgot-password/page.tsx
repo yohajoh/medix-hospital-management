@@ -4,7 +4,8 @@ import RecoveryCard from "@/app/_components/RecoveryCard";
 import { useAuth } from "@/app/_hooks/useAuth";
 
 export default function ForgotPasswordPage() {
-  const { identifier, setIdentifier, isLoading, handleForgotPasswordRequest } = useAuth();
+  const { identifier, setIdentifier, isLoading, handleForgotPasswordRequest } =
+    useAuth();
 
   return (
     <AuthLayout>

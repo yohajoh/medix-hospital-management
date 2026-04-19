@@ -1,4 +1,3 @@
-// src/lib/socket.js
 let io = null;
 
 export const setIO = (instance) => {

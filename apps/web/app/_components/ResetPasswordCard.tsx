@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { Shield, CheckCircle2, Eye, EyeOff, ArrowRight, ArrowLeft, Circle, Loader2 } from "lucide-react";
+import {
+  Shield,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  ArrowLeft,
+  Circle,
+  Loader2,
+} from "lucide-react";
 import Link from "next/link";
 
 interface Props {
@@ -11,10 +20,14 @@ interface Props {
   isLoading: boolean;
 }
 
-export default function ResetPasswordCard({ passwords, setPasswords, onSubmit, isLoading }: Props) {
+export default function ResetPasswordCard({
+  passwords,
+  setPasswords,
+  onSubmit,
+  isLoading,
+}: Props) {
   const [showPassword, setShowPassword] = useState(false);
 
-  // Strength Validation Logic
   const validation = {
     length: passwords.new.length >= 12,
     uppercase: /[A-Z]/.test(passwords.new),
@@ -38,10 +51,13 @@ export default function ResetPasswordCard({ passwords, setPasswords, onSubmit, i
           <Shield className="w-6 h-6 text-white fill-white/20" />
         </div>
 
-        <h2 className="text-[36px] font-black leading-[1.1] mb-5 tracking-tight">Secure Access Recovery</h2>
+        <h2 className="text-[36px] font-black leading-[1.1] mb-5 tracking-tight">
+          Secure Access Recovery
+        </h2>
 
         <p className="text-blue-100/80 text-[14px] leading-relaxed mb-10 font-medium">
-          Updating your security credentials to maintain HIPAA compliance and patient data integrity.
+          Updating your security credentials to maintain HIPAA compliance and
+          patient data integrity.
         </p>
 
         <div className="space-y-8">
@@ -50,8 +66,12 @@ export default function ResetPasswordCard({ passwords, setPasswords, onSubmit, i
               <Shield className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-black text-[13px] mb-0.5 uppercase tracking-wider">End-to-End Encryption</h4>
-              <p className="text-blue-100/60 text-[11px] leading-relaxed">Hashed using industry-standard protocols.</p>
+              <h4 className="font-black text-[13px] mb-0.5 uppercase tracking-wider">
+                End-to-End Encryption
+              </h4>
+              <p className="text-blue-100/60 text-[11px] leading-relaxed">
+                Hashed using industry-standard protocols.
+              </p>
             </div>
           </div>
 
@@ -60,8 +80,12 @@ export default function ResetPasswordCard({ passwords, setPasswords, onSubmit, i
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-black text-[13px] mb-0.5 uppercase tracking-wider">Identity Verification</h4>
-              <p className="text-blue-100/60 text-[11px] leading-relaxed">Validated via secure multi-factor tokens.</p>
+              <h4 className="font-black text-[13px] mb-0.5 uppercase tracking-wider">
+                Identity Verification
+              </h4>
+              <p className="text-blue-100/60 text-[11px] leading-relaxed">
+                Validated via secure multi-factor tokens.
+              </p>
             </div>
           </div>
         </div>
@@ -69,19 +93,27 @@ export default function ResetPasswordCard({ passwords, setPasswords, onSubmit, i
 
       {/* Right Column: The Form */}
       <div className="flex-1 p-12 flex flex-col justify-center">
-        <h1 className="text-2xl font-black text-gray-800 mb-2 tracking-tight">Reset Password</h1>
-        <p className="text-gray-500 text-xs mb-8 font-medium">Create a new password for your clinical account.</p>
+        <h1 className="text-2xl font-black text-gray-800 mb-2 tracking-tight">
+          Reset Password
+        </h1>
+        <p className="text-gray-500 text-xs mb-8 font-medium">
+          Create a new password for your clinical account.
+        </p>
 
         <form onSubmit={onSubmit} className="space-y-6">
           {/* New Password Field */}
           <div className="space-y-2">
-            <label className="block text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">New Password</label>
+            <label className="block text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">
+              New Password
+            </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 className="w-full bg-[#F3F6F9] border-none rounded-lg p-4 pr-12 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-[#1A4F95] transition-all"
                 value={passwords.new}
-                onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+                onChange={(e) =>
+                  setPasswords({ ...passwords, new: e.target.value })
+                }
                 required
               />
               <button
@@ -89,7 +121,11 @@ export default function ResetPasswordCard({ passwords, setPasswords, onSubmit, i
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#1A4F95] transition-colors"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>
@@ -97,8 +133,14 @@ export default function ResetPasswordCard({ passwords, setPasswords, onSubmit, i
           {/* Validation Grid */}
           <div className="bg-[#F8FAFC] rounded-xl p-5 grid grid-cols-2 gap-y-3 gap-x-4 border border-gray-100">
             <Requirement label="Min. 12 characters" met={validation.length} />
-            <Requirement label="One uppercase letter" met={validation.uppercase} />
-            <Requirement label="One special character" met={validation.special} />
+            <Requirement
+              label="One uppercase letter"
+              met={validation.uppercase}
+            />
+            <Requirement
+              label="One special character"
+              met={validation.special}
+            />
             <Requirement label="One numerical digit" met={validation.number} />
           </div>
 
@@ -111,7 +153,9 @@ export default function ResetPasswordCard({ passwords, setPasswords, onSubmit, i
               type="password"
               className="w-full bg-[#F3F6F9] border-none rounded-lg p-4 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-[#1A4F95] transition-all"
               value={passwords.confirm}
-              onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+              onChange={(e) =>
+                setPasswords({ ...passwords, confirm: e.target.value })
+              }
               required
             />
           </div>
@@ -152,7 +196,9 @@ function Requirement({ label, met }: { label: string; met: boolean }) {
       ) : (
         <Circle className="w-3.5 h-3.5 text-gray-300" />
       )}
-      <span className={`text-[10px] font-bold transition-colors ${met ? "text-gray-700" : "text-gray-400"}`}>
+      <span
+        className={`text-[10px] font-bold transition-colors ${met ? "text-gray-700" : "text-gray-400"}`}
+      >
         {label}
       </span>
     </div>

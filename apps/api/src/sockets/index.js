@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import cookie from "cookie";
 import { setIO } from "../lib/socket.js";
 import { registerNotificationHandlers } from "./handlers/notification.handler.js";
-import { registerQRHandlers } from "./handlers/qr.handler.js"; // New Import
+import { registerQRHandlers } from "./handlers/qr.handler.js";
 
 export const initSocket = (httpServer) => {
   const io = new Server(httpServer, {
@@ -20,13 +20,13 @@ export const initSocket = (httpServer) => {
 
   setIO(io);
 
-  // --- HYBRID AUTH MIDDLEWARE ---
   io.use((socket, next) => {
     try {
       const headerCookie = socket.handshake.headers.cookie;
 
-      // ADD THIS LOG
-      console.log(`Checking Auth for ${socket.id}. Cookie Header present: ${!!headerCookie}`);
+      console.log(
+        `Checking Auth for ${socket.id}. Cookie Header present: ${!!headerCookie}`,
+      );
 
       if (!headerCookie) {
         socket.user = null;
@@ -56,7 +56,6 @@ export const initSocket = (httpServer) => {
   });
 
   io.on("connection", (socket) => {
-    // 1. Setup private rooms for authenticated users
     if (socket.user) {
       const userId = socket.user.id;
       socket.join(`user:${userId}`);
@@ -65,9 +64,8 @@ export const initSocket = (httpServer) => {
       console.log(`📡 Guest Connected: ${socket.id}`);
     }
 
-    // 2. Register Separated Handlers
     registerNotificationHandlers(io, socket);
-    registerQRHandlers(io, socket); // Clean & Modular
+    registerQRHandlers(io, socket);
 
     socket.on("disconnect", (reason) => {
       console.log(`🔌 Disconnected: ${socket.id} | Reason: ${reason}`);

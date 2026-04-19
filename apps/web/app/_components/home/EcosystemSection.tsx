@@ -6,7 +6,9 @@ interface EcosystemSectionProps {
   cards: TagCard[];
 }
 
-export function EcosystemSection({ cards }: EcosystemSectionProps): JSX.Element {
+export function EcosystemSection({
+  cards,
+}: EcosystemSectionProps): JSX.Element {
   return (
     <section className="bg-[var(--ca-surface)] py-12">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -26,8 +28,12 @@ export function EcosystemSection({ cards }: EcosystemSectionProps): JSX.Element 
               <div className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--ca-surface-soft)] text-xl">
                 {card.icon}
               </div>
-              <h3 className="mt-4 text-3xl font-black tracking-[-0.03em] text-[var(--ca-text)]">{card.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-[var(--ca-text-muted)]">{card.description}</p>
+              <h3 className="mt-4 text-3xl font-black tracking-[-0.03em] text-[var(--ca-text)]">
+                {card.title}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--ca-text-muted)]">
+                {card.description}
+              </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {card.tags?.map((tag) => (
                   <span

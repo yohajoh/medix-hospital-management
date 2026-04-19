@@ -15,29 +15,23 @@ export const useAuth = () => {
   const [error, setError] = useState<string | null>(null);
 
   const getApiUrl = () => {
-    // If the baked-in variable exists, use it
     if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
 
-    // Otherwise, detect the environment dynamically
     if (typeof window !== "undefined") {
       const host = window.location.hostname;
 
-      // If we are on Render production
       if (host.includes("onrender.com") || host === "your-domain.com") {
-        return "https://medix-api-re2o.onrender.com/api"; // HARDCODE YOUR PROD API HERE
+        return "https://medix-api-re2o.onrender.com/api";
       }
     }
 
-    // Local development fallback
     return "http://localhost:5000/api";
   };
 
   const API_URL = getApiUrl();
 
-  /**
-   * Helper to map URL 'mode' to Backend 'purpose'
-   */
-  const getPurpose = (mode: string | null) => (mode === "reset" ? "PASSWORD_RESET" : "LOGIN");
+  const getPurpose = (mode: string | null) =>
+    mode === "reset" ? "PASSWORD_RESET" : "LOGIN";
 
   const handleNormalLogin = async (e: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -85,10 +79,11 @@ export const useAuth = () => {
     }
   };
 
-  /**
-   * Request OTP (Handles Login Resend and Forgot Password Resend)
-   */
-  const handleOTPRequest = async (e?: React.FormEvent, manualIdentifier?: string, mode: string | null = null) => {
+  const handleOTPRequest = async (
+    e?: React.FormEvent,
+    manualIdentifier?: string,
+    mode: string | null = null,
+  ) => {
     if (e) e.preventDefault();
     const target = manualIdentifier || identifier;
 
@@ -106,16 +101,17 @@ export const useAuth = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           identifier: target,
-          purpose: getPurpose(mode), // Map mode to purpose for the backend
+          purpose: getPurpose(mode),
         }),
       });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to send code.");
 
-      // Re-attach target and mode to preserve state
       const modeQuery = mode ? `&mode=${mode}` : "";
-      router.push(`/auth/verify-otp?target=${encodeURIComponent(target)}${modeQuery}`);
+      router.push(
+        `/auth/verify-otp?target=${encodeURIComponent(target)}${modeQuery}`,
+      );
 
       return { success: true };
     } catch (err: any) {
@@ -126,10 +122,11 @@ export const useAuth = () => {
     }
   };
 
-  /**
-   * Verify OTP (Handles both Login and Reset redirections)
-   */
-  const handleOTPVerify = async (otpCode: string, target: string, mode: string | null) => {
+  const handleOTPVerify = async (
+    otpCode: string,
+    target: string,
+    mode: string | null,
+  ) => {
     setIsLoading(true);
     setError(null);
 
@@ -140,15 +137,18 @@ export const useAuth = () => {
         body: JSON.stringify({
           identifier: target,
           otp: otpCode,
-          purpose: getPurpose(mode), // Map mode to purpose so DB finds the record
+          purpose: getPurpose(mode),
         }),
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Invalid or expired code.");
+      if (!response.ok)
+        throw new Error(data.message || "Invalid or expired code.");
 
       if (mode === "reset") {
-        router.push(`/auth/reset-password?target=${encodeURIComponent(target)}&code=${otpCode}`);
+        router.push(
+          `/auth/reset-password?target=${encodeURIComponent(target)}&code=${otpCode}`,
+        );
       } else {
         router.push("/dashboard");
       }
@@ -161,9 +161,6 @@ export const useAuth = () => {
     }
   };
 
-  /**
-   * Initial Forgot Password Request
-   */
   const handleForgotPasswordRequest = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!identifier) {
@@ -184,8 +181,9 @@ export const useAuth = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Request failed");
 
-      // Set mode=reset here
-      router.push(`/auth/verify-otp?target=${encodeURIComponent(identifier)}&mode=reset`);
+      router.push(
+        `/auth/verify-otp?target=${encodeURIComponent(identifier)}&mode=reset`,
+      );
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -193,7 +191,12 @@ export const useAuth = () => {
     }
   };
 
-  const handleFinalPasswordReset = async (email: string, otp: string, newPassword: string, confirmPassword: string) => {
+  const handleFinalPasswordReset = async (
+    email: string,
+    otp: string,
+    newPassword: string,
+    confirmPassword: string,
+  ) => {
     setIsLoading(true);
     setError(null);
 
@@ -210,7 +213,8 @@ export const useAuth = () => {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Password reset failed.");
+      if (!response.ok)
+        throw new Error(data.message || "Password reset failed.");
 
       router.push("/auth/login?reset=success");
       return { success: true };

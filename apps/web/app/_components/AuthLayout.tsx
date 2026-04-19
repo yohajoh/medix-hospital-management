@@ -1,6 +1,10 @@
 import { HeartPulse, HelpCircle } from "lucide-react";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default function AuthLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="min-h-screen bg-[#F4F7F9] flex flex-col font-sans selection:bg-[#1A4F95]/10">
       {/* Header */}
@@ -29,12 +33,22 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       {/* Footer */}
       <footer className="py-8 px-10 flex flex-col md:flex-row justify-between items-center border-t border-gray-200 bg-white/50 backdrop-blur-sm text-[10px] font-bold text-[#A0AEC0] uppercase tracking-[0.1em] gap-4">
-        <p>© 2026 CLINICAL ARCHITECT HEALTH SYSTEMS. HIPPA COMPLIANT ENVIRONMENT.</p>
+        <p>
+          © 2026 CLINICAL ARCHITECT HEALTH SYSTEMS. HIPPA COMPLIANT ENVIRONMENT.
+        </p>
         <div className="flex gap-8">
-          <span className="hover:text-[#1A4F95] cursor-pointer">Security Policy</span>
-          <span className="hover:text-[#1A4F95] cursor-pointer">Terms of Service</span>
-          <span className="hover:text-[#1A4F95] cursor-pointer">System Status</span>
-          <span className="hover:text-[#1A4F95] cursor-pointer">Emergency Support</span>
+          <span className="hover:text-[#1A4F95] cursor-pointer">
+            Security Policy
+          </span>
+          <span className="hover:text-[#1A4F95] cursor-pointer">
+            Terms of Service
+          </span>
+          <span className="hover:text-[#1A4F95] cursor-pointer">
+            System Status
+          </span>
+          <span className="hover:text-[#1A4F95] cursor-pointer">
+            Emergency Support
+          </span>
         </div>
       </footer>
     </div>

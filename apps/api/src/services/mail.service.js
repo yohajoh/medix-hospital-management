@@ -2,9 +2,6 @@ import { transport } from "../integrations/resend.js";
 import { baseLayout } from "../templates/layout.js";
 
 export const MailService = {
-  /**
-   * Internal dispatcher with Debug/Simulation support
-   */
   async _send(to, subject, html) {
     if (process.env.MAIL_DEBUG_MODE === "true") {
       console.log(`[MAIL_DEBUG] To: ${to} | Subject: ${subject}`);
@@ -13,14 +10,10 @@ export const MailService = {
     return await transport.send({ to, subject, html });
   },
 
-  /**
-   * OTP Verification Email
-   */
   async sendOTP(email, otp, purpose) {
     let title = "Security Verification";
     let message = "Your verification code is:";
 
-    // Customize message based on hospital action
     if (purpose === "PASSWORD_RESET") {
       title = "Password Reset Request";
       message = "Use this code to reset your clinical account password:";
@@ -39,9 +32,6 @@ export const MailService = {
 
     return await this._send(email, `${title}: ${otp}`, baseLayout(html, title));
   },
-  /**
-   * Appointment Confirmation
-   */
   async sendAppointment(email, data) {
     const html = `
       <p>Hello <strong>${data.patientName}</strong>,</p>
@@ -49,6 +39,10 @@ export const MailService = {
       <p><strong>Time:</strong> ${data.appointmentTime}</p>
       <a href="${process.env.FRONTEND_URL}/dashboard" class="btn">View Appointment Details</a>
     `;
-    return this._send(email, "Appointment Confirmed", baseLayout(html, "Appointment Details"));
+    return this._send(
+      email,
+      "Appointment Confirmed",
+      baseLayout(html, "Appointment Details"),
+    );
   },
 };

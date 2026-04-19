@@ -3,36 +3,28 @@ import { getIO } from "../lib/socket.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { QRType } from "@prisma/client";
-import { generateAuthToken, comparePassword, hashPassword } from "../utils/auth.util.js"; // Adjust path if needed
+import {
+  generateAuthToken,
+  comparePassword,
+  hashPassword,
+} from "../utils/auth.util.js";
 
-/**
- * Standard Credential Verification
- */
 export const verifyCredentials = async (identifier, password) => {
-  // 1. Find user by multiple possible identifiers
   const user = await prisma.user.findFirst({
     where: {
-      OR: [
-        { email: identifier },
-        { name: identifier },
-        { phone: identifier }, // Uncomment if you add phone to schema
-      ],
+      OR: [{ email: identifier }, { name: identifier }, { phone: identifier }],
     },
   });
 
-  // 2. Validate user existence and password presence (prevent OAuth-only users from bypass)
   if (!user || !user.password) {
     throw new Error("Invalid credentials");
   }
 
-  // 3. Compare passwords
   const isMatch = await comparePassword(password, user.password);
-  // const isMatch = password === user.password; // Replace with actual hash comparison in production
   if (!isMatch) {
     throw new Error("Invalid credentials");
   }
 
-  // 4. Generate the JWT
   const token = generateAuthToken(user.id, user.role);
 
   return {
@@ -45,9 +37,6 @@ export const verifyCredentials = async (identifier, password) => {
   };
 };
 
-/**
- * Step 1: Desktop generates a session
- */
 export const initQRLogin = async (metadata) => {
   const sessionId = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 3 * 60 * 1000);
@@ -74,11 +63,8 @@ export const initQRLogin = async (metadata) => {
 
   throw new Error("Database timeout after retries");
 };
-/**
- * Step 2: Mobile scan approves the session
- */
+
 export const finalizeQRLogin = async (sessionId, userId) => {
-  // Find valid, unused, and non-expired session
   const session = await prisma.qRCode.findFirst({
     where: {
       sessionId,
@@ -91,30 +77,27 @@ export const finalizeQRLogin = async (sessionId, userId) => {
     throw new Error("Invalid, used, or expired session");
   }
 
-  // Atomically update DB
   await prisma.qRCode.update({
     where: { sessionId },
     data: { userId, isApproved: true, isUsed: true },
   });
 
-  // Generate JWT for Desktop
-  const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
 
-  // PUSH TO DESKTOP ROOM
-  // Note: Event name matches what frontend expects
   getIO().to(sessionId).emit("qr:success", { token });
 
   return { success: true };
 };
 
-/**
- * Handles the logic of updating a user's password in the database.
- * This is called only after the OTP has been successfully verified.
- */
-export const updatePasswordAfterReset = async (email, newPassword, confirmPassword) => {
+export const updatePasswordAfterReset = async (
+  email,
+  newPassword,
+  confirmPassword,
+) => {
   const normalizedEmail = email.toLowerCase().trim();
 
-  // Backend Security: Ensure passwords match even if the frontend was bypassed
   if (newPassword !== confirmPassword) {
     const error = new Error("Passwords do not match.");
     error.statusCode = 400;
@@ -144,7 +127,6 @@ export const getUserProfile = async (userId) => {
     return null;
   }
 
-  // Return a clean object without the sensitive password field
   return {
     id: user.id,
     name: user.name,

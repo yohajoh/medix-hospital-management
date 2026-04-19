@@ -3,19 +3,39 @@ import type { JSX } from "react";
 const footerColumns = [
   {
     title: "Product",
-    links: ["Precision Dashboards", "EHR Partner Hub", "Lab Node Analytics", "Pharmacy Sync"],
+    links: [
+      "Precision Dashboards",
+      "EHR Partner Hub",
+      "Lab Node Analytics",
+      "Pharmacy Sync",
+    ],
   },
   {
     title: "Resources",
-    links: ["API Documentation", "Case Studies", "Compliance Pipeline", "Interoperability Standards"],
+    links: [
+      "API Documentation",
+      "Case Studies",
+      "Compliance Pipeline",
+      "Interoperability Standards",
+    ],
   },
   {
     title: "Company",
-    links: ["Roadmap", "Methodologies", "Security Assurances", "Privacy Policy"],
+    links: [
+      "Roadmap",
+      "Methodologies",
+      "Security Assurances",
+      "Privacy Policy",
+    ],
   },
   {
     title: "Support",
-    links: ["Technical Help Center", "Security Escalations", "Privacy Policy", "Terms of Service"],
+    links: [
+      "Technical Help Center",
+      "Security Escalations",
+      "Privacy Policy",
+      "Terms of Service",
+    ],
   },
 ];
 
@@ -25,10 +45,12 @@ export function SiteFooter(): JSX.Element {
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr_1fr_1fr_1fr]">
           <div>
-            <h3 className="text-4xl font-black tracking-[-0.03em]">Clinical Architect</h3>
+            <h3 className="text-4xl font-black tracking-[-0.03em]">
+              Clinical Architect
+            </h3>
             <p className="mt-3 text-sm leading-7 text-(--ca-footer-subtext)">
-              Empowering clinicians with high-fidelity intelligence systems for better outcomes and operational
-              precision.
+              Empowering clinicians with high-fidelity intelligence systems for
+              better outcomes and operational precision.
             </p>
           </div>
 
@@ -49,7 +71,8 @@ export function SiteFooter(): JSX.Element {
         </div>
 
         <div className="mt-10 border-t border-white/15 pt-5 text-xs uppercase tracking-[0.16em] text-(--ca-footer-subtext)">
-          © 2035 Clinical Architect Protect. All rights reserved. Precision in care.
+          © 2035 Clinical Architect Protect. All rights reserved. Precision in
+          care.
         </div>
       </div>
     </footer>

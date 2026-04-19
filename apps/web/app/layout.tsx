@@ -3,7 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Medix | Clinical Operations Platform",
-  description: "A modern hospital management platform for clinical operations, compliance, and patient coordination.",
+  description:
+    "A modern hospital management platform for clinical operations, compliance, and patient coordination.",
 };
 
 export default function RootLayout({

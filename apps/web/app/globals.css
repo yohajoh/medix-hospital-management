@@ -16,8 +16,10 @@
   --ca-hero-subtext: #e4eaf2;
   --ca-compliance-subtext: #c5d0df;
   --ca-footer-subtext: #a9b7cc;
-  --font-sans-custom: "Avenir Next", "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
-  --font-mono-custom: "JetBrains Mono", "Fira Code", "SFMono-Regular", Menlo, monospace;
+  --font-sans-custom:
+    "Avenir Next", "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-mono-custom:
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Menlo, monospace;
 }
 
 @theme inline {
@@ -25,13 +27,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans-custom);
   --font-mono: var(--font-mono-custom);
-}
-
-@media (prefers-color-scheme: dark) {
-  /* :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  } */
 }
 
 body {

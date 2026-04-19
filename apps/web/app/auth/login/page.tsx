@@ -4,13 +4,23 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
-import { Mail, Lock, LogIn, Tablet, ShieldCheck, HeartPulse, HelpCircle } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  LogIn,
+  Tablet,
+  ShieldCheck,
+  HeartPulse,
+  HelpCircle,
+} from "lucide-react";
 import { useQRLogin } from "@/app/_hooks/useQRLogin";
 import { useAuth } from "@/app/_hooks/useAuth";
 
 const ASSETS = {
-  GOOGLE_ICON: "https://www.gstatic.com/images/branding/product/2x/googleg_48dp.png",
-  MEDICAL_BG: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=1200",
+  GOOGLE_ICON:
+    "https://www.gstatic.com/images/branding/product/2x/googleg_48dp.png",
+  MEDICAL_BG:
+    "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=1200",
 };
 
 export default function LoginPage() {
@@ -35,7 +45,8 @@ export default function LoginPage() {
   };
 
   const getBaseUrl = () => {
-    if (process.env.NEXT_PUBLIC_FRONTEND_URL) return process.env.NEXT_PUBLIC_FRONTEND_URL;
+    if (process.env.NEXT_PUBLIC_FRONTEND_URL)
+      return process.env.NEXT_PUBLIC_FRONTEND_URL;
     if (typeof window !== "undefined") return window.location.origin;
     return "http://localhost:3000";
   };
@@ -58,8 +69,12 @@ export default function LoginPage() {
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] flex max-w-5xl w-full overflow-hidden min-h-[620px] border border-gray-100">
           <div className="flex-1 p-12 flex flex-col">
-            <h1 className="text-3xl font-black text-gray-800 mb-2">Welcome Back</h1>
-            <p className="text-gray-500 mb-8 text-sm">Secure access for clinical staff and patient care management.</p>
+            <h1 className="text-3xl font-black text-gray-800 mb-2">
+              Welcome Back
+            </h1>
+            <p className="text-gray-500 mb-8 text-sm">
+              Secure access for clinical staff and patient care management.
+            </p>
 
             {error && (
               <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-lg animate-in fade-in slide-in-from-top-1">
@@ -90,7 +105,9 @@ export default function LoginPage() {
 
               <div>
                 <div className="flex justify-between mb-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Password</label>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">
+                    Password
+                  </label>
                   <Link
                     href="/auth/forgot-password"
                     data-disabled={isLoading}
@@ -156,7 +173,9 @@ export default function LoginPage() {
                 <span className="w-full border-t border-gray-100"></span>
               </div>
               <div className="relative flex justify-center text-[10px] font-bold uppercase text-gray-400">
-                <span className="bg-white px-4 tracking-[0.2em]">Stakeholder SSO</span>
+                <span className="bg-white px-4 tracking-[0.2em]">
+                  Stakeholder SSO
+                </span>
               </div>
             </div>
 
@@ -166,13 +185,24 @@ export default function LoginPage() {
               disabled={isLoading}
               className="w-full border border-gray-200 py-3.5 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-50 active:scale-[0.99] transition-all text-sm font-semibold text-gray-600 cursor-pointer disabled:opacity-50"
             >
-              <Image src={ASSETS.GOOGLE_ICON} alt="Google" width={20} height={20} unoptimized />
-              {isLoading && loadingType === "google" ? "Connecting Google SSO..." : "Continue with Google"}
+              <Image
+                src={ASSETS.GOOGLE_ICON}
+                alt="Google"
+                width={20}
+                height={20}
+                unoptimized
+              />
+              {isLoading && loadingType === "google"
+                ? "Connecting Google SSO..."
+                : "Continue with Google"}
             </button>
 
             <p className="text-center mt-auto pt-6 text-xs text-gray-400 font-medium tracking-tight">
               New patient?{" "}
-              <Link href="/auth/signup" className="text-[#1A4F95] font-bold hover:underline">
+              <Link
+                href="/auth/signup"
+                className="text-[#1A4F95] font-bold hover:underline"
+              >
                 Register for Portal Access
               </Link>
             </p>
@@ -180,12 +210,23 @@ export default function LoginPage() {
 
           <div className="hidden lg:flex flex-1 bg-[#f9fbfc] border-l border-gray-100 flex-col items-center justify-center relative p-12 text-center">
             <div className="absolute inset-0 opacity-[0.2] pointer-events-none">
-              <Image src={ASSETS.MEDICAL_BG} alt="hospital backdrop" fill className="object-cover grayscale" priority />
+              <Image
+                src={ASSETS.MEDICAL_BG}
+                alt="hospital backdrop"
+                fill
+                className="object-cover grayscale"
+                priority
+              />
             </div>
 
             <div className="bg-white p-7 rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.08)] z-10 mb-8 border border-gray-50">
               {sessionId ? (
-                <QRCodeSVG value={qrValue} size={190} level="H" includeMargin={false} />
+                <QRCodeSVG
+                  value={qrValue}
+                  size={190}
+                  level="H"
+                  includeMargin={false}
+                />
               ) : (
                 <div className="w-[190px] h-[190px] bg-gray-50 animate-pulse rounded-lg flex items-center justify-center">
                   <div className="w-8 h-8 border-4 border-[#1A4F95] border-t-transparent rounded-full animate-spin"></div>
@@ -193,10 +234,13 @@ export default function LoginPage() {
               )}
             </div>
 
-            <h2 className="text-2xl font-black text-gray-800 z-10 mb-3 tracking-tight">Fast Scan Access</h2>
+            <h2 className="text-2xl font-black text-gray-800 z-10 mb-3 tracking-tight">
+              Fast Scan Access
+            </h2>
             <p className="text-gray-500 text-[13px] z-10 max-w-[260px] leading-relaxed font-medium">
-              Clinicians with the <span className="text-gray-600 font-bold">Medix Mobile App</span> can scan to
-              instantly authenticate on this workstation.
+              Clinicians with the{" "}
+              <span className="text-gray-600 font-bold">Medix Mobile App</span>{" "}
+              can scan to instantly authenticate on this workstation.
             </p>
 
             <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-gray-200 to-transparent my-10 z-10" />
@@ -220,16 +264,28 @@ export default function LoginPage() {
           </div>
         </div>
         <div className="flex gap-8 text-[11px] font-black text-gray-500 uppercase tracking-widest">
-          <Link href="/security" className="hover:text-[#1A4F95] transition-colors">
+          <Link
+            href="/security"
+            className="hover:text-[#1A4F95] transition-colors"
+          >
             Security
           </Link>
-          <Link href="/terms" className="hover:text-[#1A4F95] transition-colors">
+          <Link
+            href="/terms"
+            className="hover:text-[#1A4F95] transition-colors"
+          >
             Terms
           </Link>
-          <Link href="/status" className="hover:text-[#1A4F95] transition-colors">
+          <Link
+            href="/status"
+            className="hover:text-[#1A4F95] transition-colors"
+          >
             System
           </Link>
-          <Link href="/support" className="hover:text-[#1A4F95] transition-colors">
+          <Link
+            href="/support"
+            className="hover:text-[#1A4F95] transition-colors"
+          >
             Support
           </Link>
         </div>

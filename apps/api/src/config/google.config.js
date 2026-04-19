@@ -10,8 +10,14 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 const SCOPES = {
-  BASIC: ["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"],
-  CALENDAR: ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/calendar"],
+  BASIC: [
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/userinfo.email",
+  ],
+  CALENDAR: [
+    "https://www.googleapis.com/auth/calendar.events",
+    "https://www.googleapis.com/auth/calendar",
+  ],
 };
 
 export { oauth2Client, SCOPES };

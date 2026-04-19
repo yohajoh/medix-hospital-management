@@ -113,9 +113,9 @@ backend/
 
 // res.cookie("token", token, {
 // httpOnly: true,
-// secure: process.env.NODE_ENV === "production",
+// secure: process.env.NODE*ENV === "production",
 // sameSite: "Lax",
-// maxAge: 7 _ 24 _ 60 _ 60 _ 1000,
+// maxAge: 7 * 24 _ 60 _ 60 \_ 1000,
 // });
 
 // res.redirect(`${process.env.FRONTEND_URL}/dashboard`);

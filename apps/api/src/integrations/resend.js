@@ -2,14 +2,13 @@ import { Resend } from "resend";
 
 const resendClient = new Resend(process.env.RESEND_API_KEY);
 
-/**
- * Low-level transport layer
- */
 export const transport = {
   send: async ({ to, subject, html, from, replyTo }) => {
     try {
       const { data, error } = await resendClient.emails.send({
-        from: from || `${process.env.MAIL_FROM_NAME} <${process.env.MAIL_FROM_ADDRESS}>`,
+        from:
+          from ||
+          `${process.env.MAIL_FROM_NAME} <${process.env.MAIL_FROM_ADDRESS}>`,
         to,
         subject,
         html,

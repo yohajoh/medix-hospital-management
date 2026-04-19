@@ -8,7 +8,11 @@ interface OTPInputProps {
   disabled?: boolean;
 }
 
-export default function OTPInput({ length = 6, onComplete, disabled }: OTPInputProps) {
+export default function OTPInput({
+  length = 6,
+  onComplete,
+  disabled,
+}: OTPInputProps) {
   const [otp, setOtp] = useState<string[]>(new Array(length).fill(""));
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -31,7 +35,10 @@ export default function OTPInput({ length = 6, onComplete, disabled }: OTPInputP
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number,
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
