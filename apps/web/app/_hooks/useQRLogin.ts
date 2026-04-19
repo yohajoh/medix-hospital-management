@@ -28,13 +28,20 @@ export const useQRLogin = () => {
    */
   const verifyScannerSession = async (sid: string, endpoint: string = "/auth/qr/verify") => {
     setIsVerifying(true);
+
+    // Clean the URL to avoid double slashes like .../api//auth/...
+    const cleanBaseUrl = API_URL.endsWith("/") ? API_URL.slice(0, -1) : API_URL;
+    const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    const finalUrl = `${cleanBaseUrl}${cleanEndpoint}`;
+
+    console.log("Mobile calling:", finalUrl);
+
     try {
-      // jj
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(finalUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: sid }),
-        credentials: "include", // Required to send the mobile user's session
+        credentials: "include", // Essential!
       });
 
       const data = await response.json();
