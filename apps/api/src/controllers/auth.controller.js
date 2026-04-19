@@ -326,6 +326,13 @@ const resetPassword = async (req, res) => {
     // 2. Perform the Update (Logic inside Auth Service)
     await authService.updatePasswordAfterReset(email, newPassword, confirmPassword);
 
+    await prisma.verificationToken.deleteMany({
+      where: {
+        target: email.toLowerCase().trim(),
+        purpose: "PASSWORD_RESET",
+      },
+    });
+
     return res.status(200).json({
       success: true,
       message: "Password successfully updated. Please login.",

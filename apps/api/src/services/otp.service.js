@@ -46,39 +46,50 @@ export const OTPService = {
   /**
    * Core Logic: Validate OTP and fetch user
    */
-  verifyLoginOTP: async (identifier, otp, purpose = "LOGIN") => {
-    // 1. Normalize identifier immediately
+  // Modify your verifyLoginOTP to NOT delete the token if it's for PASSWORD_RESET
+  // or simply keep it until the very next step.
+
+  verifyLoginOTP: async (identifier, otp, purpose) => {
     const normalizedTarget = identifier.toLowerCase().trim();
 
-    // 2. Search using the same normalized identifier used during creation
-    const record = await prisma.verificationToken.findUnique({
-      where: {
-        target_purpose: {
-          target: normalizedTarget,
-          purpose: purpose,
+    try {
+      const record = await prisma.verificationToken.findUnique({
+        where: {
+          // This MUST match the @@unique([target, purpose]) in your schema
+          target_purpose: {
+            target: normalizedTarget,
+            purpose: purpose, // Ensure 'purpose' here is a valid OTPPurpose enum value
+          },
         },
-      },
-    });
+      });
 
-    if (!record) {
-      return { success: false, status: 401, message: "No active code found for this user." };
+      if (!record) {
+        return { success: false, status: 401, message: "No active code found for this user." };
+      }
+
+      if (record.token !== otp) {
+        return { success: false, status: 401, message: "Invalid code." };
+      }
+
+      if (record.expiresAt < new Date()) {
+        return { success: false, status: 401, message: "Code has expired." };
+      }
+
+      // Conditional Deletion
+      // Check against the Enum value. Assuming your Enum is OTPPurpose.LOGIN
+      if (purpose === "LOGIN") {
+        await prisma.verificationToken.delete({ where: { id: record.id } });
+      }
+
+      const user = await prisma.user.findFirst({
+        where: { OR: [{ email: normalizedTarget }, { phone: normalizedTarget }] },
+      });
+
+      return { success: true, user };
+    } catch (error) {
+      console.error("Prisma Error:", error);
+      // This will catch if 'purpose' is not a valid member of the OTPPurpose enum
+      return { success: false, status: 500, message: "Database verification failed." };
     }
-
-    if (record.token !== otp) {
-      return { success: false, status: 401, message: "Invalid code. Please check your latest email." };
-    }
-
-    if (record.expiresAt < new Date()) {
-      return { success: false, status: 401, message: "Code has expired." };
-    }
-
-    // Success: Clean up and find user
-    await prisma.verificationToken.delete({ where: { id: record.id } });
-
-    const user = await prisma.user.findFirst({
-      where: { OR: [{ email: normalizedTarget }, { phone: normalizedTarget }] },
-    });
-
-    return { success: true, user };
   },
 };
