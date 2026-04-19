@@ -102,7 +102,7 @@ export const finalizeQRLogin = async (sessionId, userId) => {
 
   // PUSH TO DESKTOP ROOM
   // Note: Event name matches what frontend expects
-  getIO().to(sessionId).emit("qr:authorized", { token });
+  getIO().to(sessionId).emit("qr:success", { token });
 
   return { success: true };
 };

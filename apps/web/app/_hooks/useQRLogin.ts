@@ -150,34 +150,57 @@ export const useQRLogin = () => {
     return s;
   };
 
+  // apps/web/app/_hooks/useQRLogin.ts
+
   const verifyScannerSession = async (sid: string, endpoint: string = "/auth/qr/verify") => {
     setIsVerifying(true);
+
+    // 1. Clean URLs to prevent 404s from double slashes
+    const baseUrl = API_URL.replace(/\/$/, "");
+    const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    const finalUrl = `${baseUrl}${cleanEndpoint}`;
+
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(finalUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
         body: JSON.stringify({ sessionId: sid }),
-        credentials: "include", // Required to send the JWT token
+        credentials: "include", // Essential to send the login cookie from mobile
         mode: "cors",
       });
 
-      const data = await response.json();
+      // 2. Safety check: Ensure the server actually sent JSON
+      const contentType = response.headers.get("content-type");
+      let data;
 
-      // If HTTP confirms you are logged in, THEN we talk to the socket
-      if (response.ok) {
-        const mobSocket = initMobileSocket();
-        mobSocket.emit("qr:verify", {
-          sessionId: sid,
-          userData: data.user,
-        });
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        // If server crashes or returns HTML, don't crash the frontend
+        throw new Error("Server returned an invalid format (Non-JSON)");
       }
 
-      return { success: response.ok, data };
-    } catch (err) {
-      return { success: false, data: { message: "Connection lost" } };
+      if (response.ok) {
+        /** * NOTE: We REMOVED mobSocket.emit here.
+         * Your backend service 'finalizeQRLogin' is already doing the
+         * io.to(sessionId).emit("qr:success", ...)
+         * so the mobile doesn't need to do it twice.
+         */
+        return { success: true, data };
+      } else {
+        // Handle specific error messages from your backend (e.g., "Expired session")
+        return { success: false, data: data || { message: "Auth failed" } };
+      }
+    } catch (err: any) {
+      console.error("Verification Catch:", err);
+      // This is the fallback for network timeouts or server crashes
+      return {
+        success: false,
+        data: { message: err.message || "Connection lost. Please try again." },
+      };
     } finally {
       setIsVerifying(false);
     }
