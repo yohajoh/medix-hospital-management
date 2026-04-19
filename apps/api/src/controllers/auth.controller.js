@@ -87,9 +87,10 @@ const verifyOTPAndLogin = async (req, res) => {
 
       res.cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "none",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        secure: true, // Required for HTTPS on Render
+        sameSite: "none", // CRITICAL: Allows the cookie to be sent during the scan
+        path: "/", // Ensure it's available site-wide
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
       return res.status(200).json({
@@ -221,9 +222,10 @@ const googleCallback = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: true, // Required for HTTPS on Render
+      sameSite: "none", // CRITICAL: Allows the cookie to be sent during the scan
+      path: "/", // Ensure it's available site-wide
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
@@ -253,8 +255,9 @@ const login = async (req, res) => {
     // Set the cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      secure: true, // Required for HTTPS on Render
+      sameSite: "none", // CRITICAL: Allows the cookie to be sent during the scan
+      path: "/", // Ensure it's available site-wide
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
