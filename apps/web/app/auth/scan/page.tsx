@@ -32,11 +32,6 @@ function ScanContent() {
 
       const result = await verifyScannerSession(sid, endpoint);
 
-      if (!result.success) {
-        // Temporary alert to see the actual error from the backend
-        alert(`Error: ${result.data?.message || "Check Render Backend Logs"}`);
-      }
-
       if (result.success) {
         setStatus("success");
         setMessage("Desktop login authorized successfully!");
