@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
+import { io, type Socket } from "socket.io-client";
 import { useRouter } from "next/navigation";
 
 export const useQRLogin = () => {
@@ -11,7 +11,7 @@ export const useQRLogin = () => {
     if (hasCalled.current) return;
     hasCalled.current = true;
 
-    let socket: any;
+    let socket: Socket | null = null;
 
     const fetchQR = async () => {
       console.log("Fetching QR...");
@@ -27,7 +27,7 @@ export const useQRLogin = () => {
 
       socket.emit("qr:join-session", data.sessionId);
 
-      socket.on("qr:authorized", ({ token }) => {
+      socket.on("qr:authorized", ({ token }: { token: string }) => {
         console.log("Authorized. Token received.");
 
         const expires = new Date();

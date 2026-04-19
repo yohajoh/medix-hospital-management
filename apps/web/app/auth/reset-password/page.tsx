@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import AuthLayout from "@/app/_components/AuthLayout";
 import ResetPasswordCard from "@/app/_components/ResetPasswordCard";
 import { useAuth } from "@/app/_hooks/useAuth";
 
-export default function NewPasswordPage() {
+function NewPasswordContent() {
   const searchParams = useSearchParams();
   const { handleFinalPasswordReset, isLoading, error } = useAuth();
 
@@ -49,5 +49,19 @@ export default function NewPasswordPage() {
         isLoading={isLoading}
       />
     </AuthLayout>
+  );
+}
+
+export default function NewPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#F4F7F9] flex items-center justify-center font-bold text-[#1A4F95]">
+          Loading Secure Layer...
+        </div>
+      }
+    >
+      <NewPasswordContent />
+    </Suspense>
   );
 }
