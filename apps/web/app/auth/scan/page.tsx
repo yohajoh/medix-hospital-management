@@ -1,3 +1,117 @@
+// "use client";
+
+// import { useEffect, useState, Suspense } from "react";
+// import { useSearchParams, useRouter } from "next/navigation";
+// import { useQRLogin } from "@/app/_hooks/useQRLogin";
+// import { CheckCircle2, Loader2, XCircle, ShieldCheck } from "lucide-react";
+
+// // 1. Move all the logic into a separate internal component
+// function ScanContent() {
+//   const searchParams = useSearchParams();
+//   const router = useRouter();
+//   const { verifyScannerSession, isVerifying } = useQRLogin();
+
+//   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+//   const [message, setMessage] = useState("");
+
+//   const sid = searchParams.get("sid");
+
+//   useEffect(() => {
+//     const handleVerification = async () => {
+//       if (!sid) {
+//         setStatus("error");
+//         setMessage("Invalid session. Please try scanning again.");
+//         return;
+//       }
+
+//       // Since backend doesn't provide 'type', we define our default behavior here
+//       // If you add more features later, you can add logic here to check other params
+//       const endpoint = "/auth/qr/verify";
+
+//       console.log(`Attempting verification for SID: ${sid} at ${endpoint}`);
+
+//       const result = await verifyScannerSession(sid, endpoint);
+
+//       if (result.success) {
+//         setStatus("success");
+//         setMessage("Desktop login authorized successfully!");
+
+//         setTimeout(() => {
+//           router.push("/dashboard");
+//         }, 2000);
+//       } else {
+//         setStatus("error");
+//         // This is likely where your "Expired" error is coming from
+//         setMessage(result.data?.message || "Verification failed. Ensure you are logged in on this device.");
+//       }
+//     };
+
+//     handleVerification();
+//   }, [sid, router, verifyScannerSession]);
+
+//   return (
+//     <div className="w-full max-w-md p-8 bg-white rounded-3xl shadow-xl border border-gray-100 text-center">
+//       <div className="flex justify-center mb-6">
+//         <div className="p-3 bg-orange-50 rounded-full">
+//           <ShieldCheck className="w-8 h-8 text-orange-600" />
+//         </div>
+//       </div>
+
+//       <h1 className="text-2xl font-bold text-gray-900 mb-2">Medix Secure Scan</h1>
+
+//       <div className="mt-8 mb-6">
+//         {(isVerifying || status === "idle") && (
+//           <div className="flex flex-col items-center">
+//             <Loader2 className="w-12 h-12 animate-spin text-orange-500 mb-4" />
+//             <p className="text-gray-600">Verifying security credentials...</p>
+//           </div>
+//         )}
+
+//         {status === "success" && (
+//           <div className="flex flex-col items-center animate-in zoom-in duration-300">
+//             <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
+//             <p className="text-lg font-medium text-gray-800">{message}</p>
+//             <p className="text-sm text-gray-500 mt-2">Redirecting you now...</p>
+//           </div>
+//         )}
+
+//         {status === "error" && (
+//           <div className="flex flex-col items-center animate-in fade-in duration-300">
+//             <XCircle className="w-16 h-16 text-red-500 mb-4" />
+//             <p className="text-lg font-medium text-gray-800">{message}</p>
+//             <button
+//               onClick={() => router.push("/auth/login")}
+//               className="mt-6 px-6 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
+//             >
+//               Return to Login
+//             </button>
+//           </div>
+//         )}
+//       </div>
+
+//       <p className="text-xs text-gray-400 mt-8 uppercase tracking-widest">Medix Clinical Architect Systems</p>
+//     </div>
+//   );
+// }
+
+// // 2. Wrap the content in Suspense in the main export
+// export default function ScanPage() {
+//   return (
+//     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
+//       <Suspense
+//         fallback={
+//           <div className="flex flex-col items-center">
+//             <Loader2 className="w-12 h-12 animate-spin text-orange-500 mb-4" />
+//             <p className="text-gray-600">Initializing Secure Scanner...</p>
+//           </div>
+//         }
+//       >
+//         <ScanContent />
+//       </Suspense>
+//     </div>
+//   );
+// }
+
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
@@ -5,10 +119,11 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useQRLogin } from "@/app/_hooks/useQRLogin";
 import { CheckCircle2, Loader2, XCircle, ShieldCheck } from "lucide-react";
 
-// 1. Move all the logic into a separate internal component
 function ScanContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // verifyScannerSession now handles both the API call and the Socket emit
   const { verifyScannerSession, isVerifying } = useQRLogin();
 
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -18,36 +133,41 @@ function ScanContent() {
 
   useEffect(() => {
     const handleVerification = async () => {
+      // 1. Basic validation of the URL parameter
       if (!sid) {
         setStatus("error");
-        setMessage("Invalid session. Please try scanning again.");
+        setMessage("Invalid session link. Please scan the QR code again.");
         return;
       }
 
-      // Since backend doesn't provide 'type', we define our default behavior here
-      // If you add more features later, you can add logic here to check other params
-      const endpoint = "/auth/qr/verify";
+      console.log(`[Scan] Initializing verification for SID: ${sid}`);
 
-      console.log(`Attempting verification for SID: ${sid} at ${endpoint}`);
-
-      const result = await verifyScannerSession(sid, endpoint);
+      // 2. Trigger the verification logic from our hook
+      // This calls POST /auth/qr/verify AND emits "qr:verify" via Socket
+      const result = await verifyScannerSession(sid, "/auth/qr/verify");
 
       if (result.success) {
         setStatus("success");
         setMessage("Desktop login authorized successfully!");
 
+        // 3. Optional: Redirect the mobile user to their own dashboard
         setTimeout(() => {
           router.push("/dashboard");
-        }, 2000);
+        }, 2500);
       } else {
         setStatus("error");
-        // This is likely where your "Expired" error is coming from
-        setMessage(result.data?.message || "Verification failed. Ensure you are logged in on this device.");
+        // Detailed error message from backend or fallback
+        setMessage(
+          result.data?.message || "Verification failed. Please ensure you are logged in to Medix on this browser.",
+        );
       }
     };
 
-    handleVerification();
-  }, [sid, router, verifyScannerSession]);
+    // Run verification once the component mounts and we have a session ID
+    if (sid && status === "idle" && !isVerifying) {
+      handleVerification();
+    }
+  }, [sid, verifyScannerSession, status, isVerifying, router]);
 
   return (
     <div className="w-full max-w-md p-8 bg-white rounded-3xl shadow-xl border border-gray-100 text-center">
@@ -58,51 +178,58 @@ function ScanContent() {
       </div>
 
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Medix Secure Scan</h1>
+      <p className="text-sm text-gray-500 mb-8">Authenticating your desktop session</p>
 
-      <div className="mt-8 mb-6">
+      <div className="mb-6">
+        {/* Loading State */}
         {(isVerifying || status === "idle") && (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center py-4">
             <Loader2 className="w-12 h-12 animate-spin text-orange-500 mb-4" />
-            <p className="text-gray-600">Verifying security credentials...</p>
+            <p className="text-gray-600 font-medium text-sm">Validating security handshake...</p>
           </div>
         )}
 
+        {/* Success State */}
         {status === "success" && (
-          <div className="flex flex-col items-center animate-in zoom-in duration-300">
+          <div className="flex flex-col items-center animate-in zoom-in duration-300 py-4">
             <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
-            <p className="text-lg font-medium text-gray-800">{message}</p>
-            <p className="text-sm text-gray-500 mt-2">Redirecting you now...</p>
+            <p className="text-lg font-semibold text-gray-800">{message}</p>
+            <p className="text-sm text-gray-500 mt-2">You can now use Medix on your desktop.</p>
           </div>
         )}
 
+        {/* Error State */}
         {status === "error" && (
-          <div className="flex flex-col items-center animate-in fade-in duration-300">
+          <div className="flex flex-col items-center animate-in fade-in duration-300 py-4">
             <XCircle className="w-16 h-16 text-red-500 mb-4" />
-            <p className="text-lg font-medium text-gray-800">{message}</p>
+            <p className="text-md font-medium text-gray-800 px-4">{message}</p>
             <button
               onClick={() => router.push("/auth/login")}
-              className="mt-6 px-6 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
+              className="mt-8 px-8 py-3 bg-gray-900 text-white rounded-2xl font-medium hover:bg-gray-800 transition-all active:scale-95"
             >
-              Return to Login
+              Back to Login
             </button>
           </div>
         )}
       </div>
 
-      <p className="text-xs text-gray-400 mt-8 uppercase tracking-widest">Medix Clinical Architect Systems</p>
+      <div className="pt-6 border-t border-gray-50">
+        <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold">
+          Medix Clinical Architect Systems
+        </p>
+      </div>
     </div>
   );
 }
 
-// 2. Wrap the content in Suspense in the main export
 export default function ScanPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
       <Suspense
         fallback={
           <div className="flex flex-col items-center">
-            <Loader2 className="w-12 h-12 animate-spin text-orange-500 mb-4" />
-            <p className="text-gray-600">Initializing Secure Scanner...</p>
+            <Loader2 className="w-10 h-10 animate-spin text-orange-500 mb-4" />
+            <p className="text-gray-500 text-sm">Preparing secure environment...</p>
           </div>
         }
       >
