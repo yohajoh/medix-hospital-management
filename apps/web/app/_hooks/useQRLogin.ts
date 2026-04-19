@@ -29,6 +29,7 @@ export const useQRLogin = () => {
   const verifyScannerSession = async (sid: string, endpoint: string = "/auth/qr/verify") => {
     setIsVerifying(true);
     try {
+      // jj
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
