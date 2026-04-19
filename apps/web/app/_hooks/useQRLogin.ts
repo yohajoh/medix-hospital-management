@@ -152,28 +152,32 @@ export const useQRLogin = () => {
 
   const verifyScannerSession = async (sid: string, endpoint: string = "/auth/qr/verify") => {
     setIsVerifying(true);
-    const finalUrl = `${API_URL.replace(/\/$/, "")}${endpoint.startsWith("/") ? endpoint : "/" + endpoint}`;
-
     try {
-      const response = await fetch(finalUrl, {
+      const response = await fetch(`${API_URL}${endpoint}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ sessionId: sid }),
-        credentials: "include",
+        credentials: "include", // Required to send the JWT token
         mode: "cors",
       });
 
       const data = await response.json();
 
-      // If HTTP verification passes, trigger the socket emit
+      // If HTTP confirms you are logged in, THEN we talk to the socket
       if (response.ok) {
         const mobSocket = initMobileSocket();
-        mobSocket.emit("qr:verify", { sessionId: sid, userData: data.user });
+        mobSocket.emit("qr:verify", {
+          sessionId: sid,
+          userData: data.user,
+        });
       }
 
       return { success: response.ok, data };
     } catch (err) {
-      return { success: false, message: "Network error" };
+      return { success: false, data: { message: "Connection lost" } };
     } finally {
       setIsVerifying(false);
     }
