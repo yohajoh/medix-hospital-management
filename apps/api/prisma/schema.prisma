@@ -1,4 +1,3 @@
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
@@ -9,16 +8,37 @@ datasource db {
 }
 
 // --- ENUMS ---
+
 enum UserRole {
   PATIENT
   DOCTOR
   ADMIN
+  STAFF
 }
 
 enum UserStatus {
   ACTIVE
   BANNED
   PENDING
+  DEACTIVATED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
 }
 
 enum QRType {
@@ -44,18 +64,37 @@ model User {
   email              String     @unique
   password           String?    
   phone              String?    @unique
-  
+  username           String?    @unique // Required for Staff Login logic
+  avatarUrl          String?    // For directory and check-in summary photos
+
   // OAuth & Integration
   googleId           String?    @unique
   googleRefreshToken String?    
   calendarConnected  Boolean    @default(false)
 
+  // System Access & Role
   role               UserRole   @default(PATIENT)
   status             UserStatus @default(ACTIVE)
+  
+  // Security & Audit (HIPAA & Session Tracking)
+  lastLoginAt        DateTime?
+  lastLoginIp        String?
+  lastLoginDevice    String?
+  failedLoginAttempts Int       @default(0)
+  lockoutUntil       DateTime?
+  passwordChangedAt  DateTime?  @default(now())
+  mustChangePassword Boolean    @default(false) // For 'Temporary Password' flow
+  
+  // UI & Localization
+  preferredLanguage  String     @default("en")
+  timezone           String     @default("UTC")
 
   // Relations
+  patientProfile     PatientProfile?
+  staffProfile       StaffProfile?
   qrCodes            QRCode[]
   notifications      Notification[]
+  auditLogs          AuditLog[]
 
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt 
@@ -63,22 +102,73 @@ model User {
   @@map("users") 
 }
 
+model PatientProfile {
+  id                 String     @id @default(uuid())
+  userId             String     @unique
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Identity Verification
+  nationalId         String?    @unique // Encrypted SSN/National ID
+  isVerified         Boolean    @default(false) // Triggers 'Verified Identity' badge
+  
+  // Personal & Clinical Details
+  gender             Gender?
+  dateOfBirth        DateTime?
+  bloodGroup         BloodGroup?
+  residentialAddress String?    @db.Text
+  
+  // Insurance Context
+  insuranceProvider  String?    
+  insurancePolicyNum String?
+  insuranceGroupId   String?    
+  
+  // Emergency Contact (From Enrollment Screen)
+  emergencyName      String?
+  emergencyRelation  String?
+  emergencyPhone     String?
+
+  // High-Visibility Clinical Flags (For Check-in Station)
+  criticalAlerts     String[]   // e.g., ["Penicillin Allergy"]
+  hasCriticalAllergy Boolean    @default(false) 
+
+  @@map("patient_profiles")
+}
+
+model StaffProfile {
+  id                 String     @id @default(uuid())
+  userId             String     @unique
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Professional Identity (Distinct from Personal Identity)
+  licenseNumber      String?    @unique // Medical License / Authority ID
+  nationalId         String?    @unique // Staff's personal ID for HR/Payroll
+  
+  // Work Context (From Staff Registration Screen)
+  roleTitle          String?    // e.g., "Attending Physician"
+  department         String?    // e.g., "Cardiology"
+  specialization     String?    // e.g., "Pediatric Cardiology"
+  
+  // Professional Authorization
+  digitalSignature   String?    // Used for "Confirm & Check In" verification
+  permissions        Json?      // To map the 'Permission Preview' UI sidebar
+
+  @@map("staff_profiles")
+}
+
 model QRCode {
   id           String    @id @default(uuid())
-  // The unique session ID used for the Socket.io room
-  sessionId    String    @unique
+  sessionId    String    @unique // Used for Socket.io room synchronization
   
-  // The user who scanned/authorized the code
   userId       String?
   user         User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  
   type         QRType    @default(LOGIN)
   
-  // Handshake State
+  // State tracking
   isUsed       Boolean   @default(false)
   isApproved   Boolean   @default(false)
   
-  // Metadata for security
+  // Metadata for security audits
   deviceInfo   String?   
   ipAddress    String?
 
@@ -91,14 +181,14 @@ model QRCode {
 
 model VerificationToken {
   id        String     @id @default(uuid())
-  target    String     // Email or Phone
-  token     String     // The OTP code
+  target    String     // Email or Phone number
+  token     String     // OTP Code
   purpose   OTPPurpose @default(LOGIN)
-  metadata  Json?      // Flexible storage for temporary data
+  metadata  Json?      // Temporary storage for flow-specific data
   expiresAt DateTime
   createdAt DateTime   @default(now())
 
-  @@unique([target, purpose]) // One active OTP per target per purpose
+  @@unique([target, purpose])
   @@index([target])
 }
 
@@ -109,11 +199,26 @@ model Notification {
   
   title     String
   message   String
-  type      String   
+  type      String   // e.g., "APPOINTMENT", "SECURITY", "SYSTEM"
   isRead    Boolean  @default(false)
 
   createdAt DateTime @default(now())
 
   @@index([userId])
   @@map("notifications")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  action     String   // e.g., "LOGIN", "VIEW_PATIENT_DATA", "EXPORT_REPORT"
+  resourceId String?  // ID of the specific record accessed
+  metadata   Json?    // Contextual data (IP, browser, old vs new values)
+  
+  timestamp  DateTime @default(now())
+
+  @@index([userId])
+  @@map("audit_logs")
 }

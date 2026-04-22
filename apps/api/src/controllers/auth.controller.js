@@ -4,35 +4,23 @@ import { prisma } from "../lib/prisma.js";
 import { generateAuthToken } from "../utils/auth.util.js";
 import * as authService from "../services/auth.service.js";
 import { OTPService } from "../services/otp.service.js";
-import { OTPPurpose } from "@prisma/client";
+import OTPPurpose from "@prisma/client";
 
 const requestLoginOTP = async (req, res) => {
   try {
     const { identifier } = req.body;
-    if (!identifier)
-      return res
-        .status(400)
-        .json({ success: false, message: "Identifier required" });
+    if (!identifier) return res.status(400).json({ success: false, message: "Identifier required" });
 
-    const result = await OTPService.requestLoginOTP(
-      identifier,
-      OTPPurpose.LOGIN,
-    );
+    const result = await OTPService.requestLoginOTP(identifier, OTPPurpose.LOGIN);
 
     if (!result.success) {
-      return res
-        .status(result.status)
-        .json({ success: false, message: result.message });
+      return res.status(result.status).json({ success: false, message: result.message });
     }
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Verification code sent." });
+    return res.status(200).json({ success: true, message: "Verification code sent." });
   } catch (error) {
     console.error("Request OTP Controller Error:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -41,21 +29,13 @@ const verifyOTPAndLogin = async (req, res) => {
     const { identifier, otp, purpose } = req.body;
 
     if (!identifier || !otp) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Credentials missing" });
+      return res.status(400).json({ success: false, message: "Credentials missing" });
     }
 
-    const result = await OTPService.verifyLoginOTP(
-      identifier,
-      otp,
-      purpose || OTPPurpose.LOGIN,
-    );
+    const result = await OTPService.verifyLoginOTP(identifier, otp, purpose || OTPPurpose.LOGIN);
 
     if (!result.success) {
-      return res
-        .status(result.status)
-        .json({ success: false, message: result.message });
+      return res.status(result.status).json({ success: false, message: result.message });
     }
 
     if (!purpose || purpose === OTPPurpose.LOGIN) {
@@ -82,9 +62,7 @@ const verifyOTPAndLogin = async (req, res) => {
     });
   } catch (error) {
     console.error("Verify OTP Controller Error:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -108,9 +86,7 @@ export const approveQR = async (req, res, next) => {
     const { sessionId } = req.body;
 
     if (!sessionId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Session ID is missing" });
+      return res.status(400).json({ success: false, message: "Session ID is missing" });
     }
 
     await authService.finalizeQRLogin(sessionId, req.user.id);
@@ -161,14 +137,10 @@ const googleCallback = async (req, res) => {
     const { data } = await oauth2.userinfo.get();
 
     if (state) {
-      const isCalendarGranted = tokens.scope.includes(
-        "https://www.googleapis.com/auth/calendar",
-      );
+      const isCalendarGranted = tokens.scope.includes("https://www.googleapis.com/auth/calendar");
 
       if (!isCalendarGranted) {
-        return res.redirect(
-          `${process.env.FRONTEND_URL}/dashboard?error=calendar_not_granted`,
-        );
+        return res.redirect(`${process.env.FRONTEND_URL}/dashboard?error=calendar_not_granted`);
       }
 
       await prisma.user.update({
@@ -179,9 +151,7 @@ const googleCallback = async (req, res) => {
         },
       });
 
-      return res.redirect(
-        `${process.env.FRONTEND_URL}/dashboard?success=calendar_synced`,
-      );
+      return res.redirect(`${process.env.FRONTEND_URL}/dashboard?success=calendar_synced`);
     }
 
     let user = await prisma.user.findUnique({ where: { email: data.email } });
@@ -225,10 +195,7 @@ const login = async (req, res) => {
       });
     }
 
-    const { token, user } = await authService.verifyCredentials(
-      identifier,
-      password,
-    );
+    const { token, user } = await authService.verifyCredentials(identifier, password);
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -262,27 +229,18 @@ const login = async (req, res) => {
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email)
-      return res
-        .status(400)
-        .json({ success: false, message: "Email is required." });
+    if (!email) return res.status(400).json({ success: false, message: "Email is required." });
 
     const result = await OTPService.requestLoginOTP(email, "PASSWORD_RESET");
 
     if (!result.success) {
-      return res
-        .status(result.status)
-        .json({ success: false, message: result.message });
+      return res.status(result.status).json({ success: false, message: result.message });
     }
 
-    return res
-      .status(200)
-      .json({ success: true, message: "A recovery code has been sent." });
+    return res.status(200).json({ success: true, message: "A recovery code has been sent." });
   } catch (error) {
     console.error("Forgot Password Controller Error:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error." });
+    return res.status(500).json({ success: false, message: "Internal server error." });
   }
 };
 
@@ -291,16 +249,10 @@ const resetPassword = async (req, res) => {
     const { email, otp, newPassword, confirmPassword } = req.body;
 
     if (!email || !otp || !newPassword || !confirmPassword) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Missing required fields." });
+      return res.status(400).json({ success: false, message: "Missing required fields." });
     }
 
-    const verification = await OTPService.verifyLoginOTP(
-      email,
-      otp,
-      "PASSWORD_RESET",
-    );
+    const verification = await OTPService.verifyLoginOTP(email, otp, "PASSWORD_RESET");
 
     if (!verification.success) {
       return res.status(verification.status).json({
@@ -309,11 +261,7 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    await authService.updatePasswordAfterReset(
-      email,
-      newPassword,
-      confirmPassword,
-    );
+    await authService.updatePasswordAfterReset(email, newPassword, confirmPassword);
 
     await prisma.verificationToken.deleteMany({
       where: {

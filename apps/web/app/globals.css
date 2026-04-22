@@ -16,10 +16,8 @@
   --ca-hero-subtext: #e4eaf2;
   --ca-compliance-subtext: #c5d0df;
   --ca-footer-subtext: #a9b7cc;
-  --font-sans-custom:
-    "Avenir Next", "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
-  --font-mono-custom:
-    "JetBrains Mono", "Fira Code", "SFMono-Regular", Menlo, monospace;
+  --font-sans-custom: "Avenir Next", "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-mono-custom: "JetBrains Mono", "Fira Code", "SFMono-Regular", Menlo, monospace;
 }
 
 @theme inline {

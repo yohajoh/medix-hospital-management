@@ -2,12 +2,8 @@ import { prisma } from "../lib/prisma.js";
 import { getIO } from "../lib/socket.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { QRType } from "@prisma/client";
-import {
-  generateAuthToken,
-  comparePassword,
-  hashPassword,
-} from "../utils/auth.util.js";
+import QRType from "@prisma/client";
+import { generateAuthToken, comparePassword, hashPassword } from "../utils/auth.util.js";
 
 export const verifyCredentials = async (identifier, password) => {
   const user = await prisma.user.findFirst({
@@ -91,11 +87,7 @@ export const finalizeQRLogin = async (sessionId, userId) => {
   return { success: true };
 };
 
-export const updatePasswordAfterReset = async (
-  email,
-  newPassword,
-  confirmPassword,
-) => {
+export const updatePasswordAfterReset = async (email, newPassword, confirmPassword) => {
   const normalizedEmail = email.toLowerCase().trim();
 
   if (newPassword !== confirmPassword) {

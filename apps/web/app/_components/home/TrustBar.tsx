@@ -13,10 +13,7 @@ export function TrustBar({ logos }: TrustBarProps): JSX.Element {
         </div>
         <div className="mt-5 grid grid-cols-1 gap-3 text-center sm:grid-cols-3">
           {logos.map((logo) => (
-            <div
-              key={logo}
-              className="text-3xl font-black tracking-[-0.03em] text-[var(--ca-text-subtle)]"
-            >
+            <div key={logo} className="text-3xl font-black tracking-[-0.03em] text-[var(--ca-text-subtle)]">
               {logo}
             </div>
           ))}

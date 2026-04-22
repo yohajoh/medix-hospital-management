@@ -30,11 +30,7 @@ export function SiteHeader({ navItems }: SiteHeaderProps): JSX.Element {
 
           <nav className="hidden items-center gap-6 text-[15px] font-medium text-(--ca-text-muted) lg:flex">
             {navItems.map((item) => (
-              <Link
-                key={item}
-                href="#"
-                className="transition hover:text-(--ca-text)"
-              >
+              <Link key={item} href="#" className="transition hover:text-(--ca-text)">
                 {item}
               </Link>
             ))}

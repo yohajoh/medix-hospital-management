@@ -18,8 +18,7 @@ export function HeroSection(): JSX.Element {
             The Next Generation of Clinical Intelligence
           </h1>
           <p className="mt-5 max-w-2xl text-lg font-medium text-(--ca-hero-subtext) md:text-2xl">
-            A high-performance framework engineered for precision medicine and
-            operational excellence.
+            A high-performance framework engineered for precision medicine and operational excellence.
           </p>
           <button
             type="button"
